@@ -49252,26 +49252,29 @@ class MicroQueue {
     constructor(elements) {
         this.elements = elements;
     }
-    dequeue(fn, suffix, te) {
+    dequeue(suffix) {
         if (this.elements.length === 0) {
             return undefined;
         }
+        let command = "";
+        let terminator = "";
         let element = this.elements.shift();
         if (element) {
             if (typeof element === "string" && element.includes("[::]")) {
                 const elementParts = element.split("[::]");
                 element = elementParts[0];
                 if (elementParts.length > 1) {
-                    if (te)
-                        te(elementParts[1]);
+                    terminator = elementParts[1];
                 }
             }
             if (suffix)
                 element += suffix;
-            if (fn)
-                fn(element);
+            command = element;
         }
-        return element;
+        return {
+            command,
+            terminator
+        };
     }
 }
 async function main(argc, argv) {
@@ -49562,11 +49565,11 @@ async function executeSshCommands() {
                 if (`${data}`.includes("logout")) {
                     clearTimeout(waiter);
                 }
-                else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login"))) || (`${data}`.includes(commandTerminator))) {
+                else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login"))) || (`${data}`.toLowerCase().includes(commandTerminator))) {
                     commandTerminator = "";
-                    sshCommandsQueue.dequeue(stream.write.bind(stream), "\n", (terminator) => {
-                        commandTerminator = terminator.toLowerCase();
-                    });
+                    const { command, terminator } = sshCommandsQueue.dequeue("\n") ?? {};
+                    commandTerminator = (terminator ?? "").toLowerCase();
+                    stream.write.bind(stream)(command);
                 }
             }).stderr.on('data', (data) => {
                 print("error", `${data}`);
