@@ -210,7 +210,7 @@ async function executeSshCommands() {
     const port = getInput("port", "string", environmentVars["PORT"] ?? process.env.PORT ?? "");
     const appName = getInput("app-name", "string", environmentVars["APP_NAME"] ?? process.env.APP_NAME ?? "");
     const environment = getInput("environment", "string", environmentVars["ENVIRONMENT"] ?? process.env.ENVIRONMENT ?? "");
-    const containerPort = getInput("container-port", "string", environmentVars["CONTAINER_PORT"] ?? process.env.CONTAINER_PORT ?? "");
+    const containerPort = getInput("container-port", "string", environmentVars["CONTAINER_PORT"] ?? process.env.CONTAINER_PORT ?? port);
     console.log("SSH Variables:", "Host=" + sshHost, "Port=" + sshPort, "Username=" + sshUsername, "Password=" + (sshPassword ?? "*")[0] + "*******");
     const appPublicPort = getInput("app-public-port", "string", environmentVars["APP_PUBLIC_PORT"] ?? process.env.APP_PUBLIC_PORT ?? containerPort ?? port);
 
@@ -283,7 +283,7 @@ async function executeSshCommands() {
             sshCommands.push(`sudo docker rmi ${dockerImageLocation}`);
         }
         if (dockerImageLocation) {
-            sshCommands.push(`sudo docker pull ${dockerImageLocation}`); 
+            sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
         }
         sshCommands.push(`sudo docker run -d $DOCKER_ENVS --name ${dockerAppName}_deploying -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
     }
