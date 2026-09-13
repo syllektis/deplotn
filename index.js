@@ -49561,7 +49561,7 @@ async function executeSshCommands() {
                 }
                 conn.end();
             }).on('data', (data) => {
-                print("log!", `>>>${data}<<<`);
+                print("log!", `${data}`);
                 if (`${data}`.includes("logout")) {
                     clearTimeout(waiter);
                 }
