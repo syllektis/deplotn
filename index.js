@@ -49558,7 +49558,7 @@ async function executeSshCommands() {
                 }
                 conn.end();
             }).on('data', (data) => {
-                print("log!", `${data} ---> ${commandTerminator}`);
+                print("log!", `${data}`);
                 if (`${data}`.includes("logout")) {
                     clearTimeout(waiter);
                 }
