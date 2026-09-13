@@ -34,6 +34,7 @@ inputs:
     description: "Letter casing for the environment variables, options are UPPER, LOWER, NONE"
     default: "UPPER"
     required: false
+
   # docker setup
   dockerize: 
     description: "Flag to indicate if to build a docker image if a Dockerfile is in the project"
@@ -70,6 +71,24 @@ inputs:
   environment-is-image-namespace: 
     description: "Flag to indicate if the environment value is the same as the docker image name space"
     required: false
+  docker-deploy: 
+    description: "Flag to indicate if to deploy to vm using docker"
+    required: false
+    default: false
+  docker-registries:
+    description: "List of docker registries to configure during deployment and build, example user:password@host.domain, user:password@host.domain|environment"
+    required: false
+  docker-app-name:
+    description: "Name of the container/service when run with docker. Defaults to app-name"
+    required: false
+  docker-image-location:
+    description: "Value of the docker service/container image. e.g. ghcr.io/test/app:environment"
+    required: false
+  docker-image-nocache:
+    description: "Flag to indicate if to remove the app existing image before pulling a new image"
+    required: false
+    default: true
+
   # ssh setup
   ssh-host: 
     description: "The SSH server host"
@@ -99,8 +118,19 @@ inputs:
   ssh-expose-vars: 
     description: "The variables to expose to the ssh shell"
     required: false
-    default: |
-        DOKKU_CONFIGS
+  
+  # apache2 setup
+  apache2-config-path: 
+    description: "Relative path in the repo where the apache2 config file is located for the deployed app"
+    required: false
+  apache2-configure-domain: 
+    description: "Flag to indicate if to configure domain name for the app if using apache server"
+    required: false
+  apache2-domain-names: 
+    description: "List of domain name to configure for the deployed app. e.g. name.domain.com, name.domain.com|environment"
+    required: false
+  
+  # dokku setup
   dokku-deploy: 
     description: "Flag to indicate if to deploy to vm using dokku"
     required: false
