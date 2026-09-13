@@ -189,7 +189,7 @@ async function executeSshCommands() {
     }, {});
     const environmentVarsSshCommands: string[] = [];
     for (const environmentVar of environmentVarsRaw) {
-        const value = (environmentVars[environmentVar] ?? process.env[environmentVar] ?? "");
+        /*const value = (environmentVars[environmentVar] ?? process.env[environmentVar] ?? "");
         if (value.includes("=") && value.includes("\n")) {
             environmentVarsSshCommands.push(`export ${environmentVar}='` + value.replaceAll("\n", " ") + `'`);
             const environmentVarParts = value.split("\n");
@@ -198,7 +198,7 @@ async function executeSshCommands() {
             }
         } else {
             environmentVarsSshCommands.push(`export ${environmentVar}=` + value);
-        }
+        }*/
     }
 
     const dokkuDeploy = getInput("dokku-deploy", "boolean", false);

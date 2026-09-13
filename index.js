@@ -49423,17 +49423,16 @@ async function executeSshCommands() {
     }, {});
     const environmentVarsSshCommands = [];
     for (const environmentVar of environmentVarsRaw) {
-        const value = (environmentVars[environmentVar] ?? process.env[environmentVar] ?? "");
+        /*const value = (environmentVars[environmentVar] ?? process.env[environmentVar] ?? "");
         if (value.includes("=") && value.includes("\n")) {
             environmentVarsSshCommands.push(`export ${environmentVar}='` + value.replaceAll("\n", " ") + `'`);
             const environmentVarParts = value.split("\n");
             for (const environmentVarPart of environmentVarParts) {
                 environmentVarsSshCommands.push(`export ${environmentVarPart.replaceAll("\r", "")}`);
             }
-        }
-        else {
+        } else {
             environmentVarsSshCommands.push(`export ${environmentVar}=` + value);
-        }
+        }*/
     }
     const dokkuDeploy = getInput("dokku-deploy", "boolean", false);
     const dockerDeploy = getInput("docker-deploy", "boolean", false);
