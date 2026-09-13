@@ -329,7 +329,7 @@ async function executeSshCommands() {
                 }
                 conn.end();
             }).on('data', (data: any) => { // TODO: properly wait for command complete output
-                print("log!", `${data}`);
+                print("log!", `>>>${data}<<<`);
                 if (`${data}`.includes("logout")) {
                     clearTimeout(waiter);
                 } else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login"))) || (`${data}`.includes(commandTerminator))) {
