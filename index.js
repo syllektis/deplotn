@@ -49569,7 +49569,9 @@ async function executeSshCommands() {
                     const { command, terminator } = sshCommandsQueue.dequeue("\n") ?? {};
                     commandTerminator = (terminator ?? "").toLowerCase();
                     console.log("Expected terminator ---", commandTerminator);
-                    stream.write.bind(stream)(command);
+                    if (command) {
+                        stream.write.bind(stream)(command);
+                    }
                 }
             }).stderr.on('data', (data) => {
                 print("error", `${data}`);
