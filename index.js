@@ -49566,9 +49566,9 @@ async function executeSshCommands() {
                     clearTimeout(waiter);
                 }
                 else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login"))) || (`${data}`.toLowerCase().includes(commandTerminator))) {
+                    console.log("Existing terminator ---", commandTerminator);
                     const { command, terminator } = sshCommandsQueue.dequeue("\n") ?? {};
                     commandTerminator = (terminator ?? "").toLowerCase();
-                    console.log("Expected terminator ---", commandTerminator);
                     if (command) {
                         stream.write.bind(stream)(command);
                     }
