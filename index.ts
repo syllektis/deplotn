@@ -337,7 +337,9 @@ async function executeSshCommands() {
                 print("log!", `${data}`);
                 if (`${data}`.includes("logout")) {
                     clearTimeout(waiter);
-                } else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login"))) || (`${data}`.toLowerCase().includes(commandTerminator))) {
+                } else if ((`${data}`.toLowerCase().includes(commandTerminator)) || (`${data}`.toLowerCase()===("\n"))) {
+                    // skip
+                } else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login")))) {
                     console.log("Existing terminator ---", commandTerminator);
                     const { command, terminator } = sshCommandsQueue.dequeue("\n") ?? {};
                     commandTerminator = (terminator ?? "").toLowerCase();
