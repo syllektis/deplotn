@@ -49258,10 +49258,6 @@ class MicroQueue {
         }
         let element = this.elements.shift();
         if (element) {
-            if (suffix)
-                element += suffix;
-            if (fn)
-                fn(element);
             if (typeof element === "string" && element.includes("[::]")) {
                 const elementParts = element.split("[::]");
                 element = elementParts[0];
@@ -49270,6 +49266,10 @@ class MicroQueue {
                         te(elementParts[1]);
                 }
             }
+            if (suffix)
+                element += suffix;
+            if (fn)
+                fn(element);
         }
         return element;
     }

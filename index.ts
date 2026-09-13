@@ -24,8 +24,6 @@ class MicroQueue<T> {
         }
         let element = this.elements.shift();
         if (element) {
-            if (suffix) element += suffix as any;
-            if (fn) fn(element);
             if (typeof element === "string" && element.includes("[::]")) {
                 const elementParts = element.split("[::]");
                 element = elementParts[0] as any;
@@ -33,6 +31,8 @@ class MicroQueue<T> {
                     if (te) te(elementParts[1] as any);
                 }
             }
+            if (suffix) element += suffix as any;
+            if (fn) fn(element as any);
         }
         return element;
     }
