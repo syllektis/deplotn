@@ -290,9 +290,9 @@ async function executeSshCommands() {
             sshCommands.push(`sudo docker rmi ${dockerImageLocation} [::]such image`);
         }
         if (dockerImageLocation) {
-            sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
+            //sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
         }
-        sshCommands.push(`sudo docker run -d $DOCKER_ENVS --name ${dockerAppName}_deploying -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
+        //sshCommands.push(`sudo docker run -d $DOCKER_ENVS --name ${dockerAppName}_deploying -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
     }
 
     sshCommands.push("exit");
