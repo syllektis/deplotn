@@ -18,7 +18,7 @@ class MicroQueue<T> {
         this.elements = elements;
     }
 
-    dequeue(fn?: (entry: T) => void, suffix?: T) {
+    dequeue(fn?: (entry: T) => void, suffix?: T, te?: (t: T) => void) {
         if (this.elements.length === 0) {
             return undefined;
         }
@@ -26,6 +26,13 @@ class MicroQueue<T> {
         if (element) {
             if (suffix) element += suffix as any;
             if (fn) fn(element);
+            if (typeof element === "string" && element.includes("[::]")) {
+                const elementParts = element.split("[::]");
+                element = elementParts[0] as any;
+                if (elementParts.length > 1) {
+                    if (te) te(elementParts[1] as any);
+                }
+            }
         }
         return element;
     }
@@ -276,11 +283,11 @@ async function executeSshCommands() {
             const domain = registryParts[registryParts.length - 1];
             const access = registryParts.slice(0, registryParts.length - 1);
             const [username, ...password] = access.join("@").split(":");
-            sshCommands.push(`sudo echo "${password.join("")}" | docker login ${domain} -u ${username} --password-stdin`);
+            sshCommands.push(`sudo echo "${password.join("")}" | docker login ${domain} -u ${username} --password-stdin [::]login`);
         }
 
         if (dockerImageNoCache) {
-            sshCommands.push(`sudo docker rmi ${dockerImageLocation}`);
+            sshCommands.push(`sudo docker rmi ${dockerImageLocation} [::]No such image`);
         }
         if (dockerImageLocation) {
             sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
@@ -308,6 +315,7 @@ async function executeSshCommands() {
         connPayload.privateKey = sshPrivateKey;
     }
     conn.on('ready', () => {
+        let commandTerminator = "";
         conn.shell((err, stream) => {
             if (err) throw err;
             const waiter = setTimeout(() => {
@@ -320,12 +328,14 @@ async function executeSshCommands() {
                     core.setFailed(`${code}`);
                 }
                 conn.end();
-            }).on('data', (data: any) => {
+            }).on('data', (data: any) => { // TODO: properly wait for command complete output
                 print("log!", `${data}`);
                 if (`${data}`.includes("logout")) {
                     clearTimeout(waiter);
-                } else if (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login")) {
-                    sshCommandsQueue.dequeue(stream.write.bind(stream), "\n");
+                } else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login"))) || (`${data}`.includes(commandTerminator))) {
+                    sshCommandsQueue.dequeue(stream.write.bind(stream), "\n", (terminator) => {
+                        commandTerminator = terminator.toLowerCase();
+                    });
                 }
             }).stderr.on('data', (data: any) => {
                 print("error", `${data}`);
