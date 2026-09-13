@@ -287,7 +287,7 @@ async function executeSshCommands() {
         }
 
         if (dockerImageNoCache) {
-            sshCommands.push(`sudo docker rmi ${dockerImageLocation} [::]No such image`);
+            sshCommands.push(`sudo docker rmi ${dockerImageLocation} [::]such image`);
         }
         if (dockerImageLocation) {
             sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
@@ -329,10 +329,11 @@ async function executeSshCommands() {
                 }
                 conn.end();
             }).on('data', (data: any) => { // TODO: properly wait for command complete output
-                print("log!", `${data}`);
+                print("log!", `${data} ---> ${commandTerminator}`);
                 if (`${data}`.includes("logout")) {
                     clearTimeout(waiter);
                 } else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login"))) || (`${data}`.includes(commandTerminator))) {
+                    commandTerminator = "";
                     sshCommandsQueue.dequeue(stream.write.bind(stream), "\n", (terminator) => {
                         commandTerminator = terminator.toLowerCase();
                     });
