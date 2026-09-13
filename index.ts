@@ -211,9 +211,6 @@ async function executeSshCommands() {
     const sshPassphrase = getInput("ssh-passphrase", "string", environmentVars["SSH_PASSPHRASE"] ?? process.env.SSH_PASSPHRASE ?? "");
     const sshPrivateKey = getInput("ssh-privatekey", "string", environmentVars["SSH_PRIVATEKEY"] ?? process.env.SSH_PRIVATEKEY ?? "");
 
-    if (!sshHost || !sshCommands.length) {
-        return;
-    }
     const port = getInput("port", "string", environmentVars["PORT"] ?? process.env.PORT ?? "");
     const appName = getInput("app-name", "string", environmentVars["APP_NAME"] ?? process.env.APP_NAME ?? "");
     const environment = getInput("environment", "string", environmentVars["ENVIRONMENT"] ?? process.env.ENVIRONMENT ?? "");
@@ -295,6 +292,9 @@ async function executeSshCommands() {
         //sshCommands.push(`sudo docker run -d $DOCKER_ENVS --name ${dockerAppName}_deploying -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
     }
 
+    if (!sshHost || !sshCommands.length) {
+        return;
+    }
     sshCommands.push("exit");
 
     const conn = new Client();
