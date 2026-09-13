@@ -338,9 +338,9 @@ async function executeSshCommands() {
                 if (`${data}`.includes("logout")) {
                     clearTimeout(waiter);
                 } else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login"))) || (`${data}`.toLowerCase().includes(commandTerminator))) {
-                    commandTerminator = "";
                     const { command, terminator } = sshCommandsQueue.dequeue("\n") ?? {};
                     commandTerminator = (terminator ?? "").toLowerCase();
+                    console.log("Expected terminator ---", commandTerminator);
                     stream.write.bind(stream)(command);
                 }
             }).stderr.on('data', (data: any) => {
