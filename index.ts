@@ -201,6 +201,7 @@ async function executeSshCommands() {
     let sshConnectionUsername, sshConnectionPassword, sshConnectionHost, sshConnectionPort;
     const sshConnection = getInput("ssh-connection", "string", environmentVars["SSH_CONNECTION"] ?? process.env.SSH_CONNECTION ?? "") as string;
 
+    console.log("WE ARE HERE", sshConnection);
     if (sshConnection) {
         const [sshAccess, sshDomain] = sshConnection.split("@");
         const [sshHost, ...sshPort] = sshDomain.split(":");
@@ -209,6 +210,7 @@ async function executeSshCommands() {
         sshConnectionUsername = sshUsername;
         sshConnectionPort = (sshPort ?? []).join("");
         sshConnectionPassword = (sshPassword ?? []).join("");
+        console.log("WE ARE HERE 2", sshConnectionHost, sshConnectionPort, sshConnectionUsername, sshConnectionPassword);
     }
 
     const dokkuDeploy = getInput("dokku-deploy", "boolean", false);
