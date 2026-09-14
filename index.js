@@ -49573,7 +49573,7 @@ async function executeSshCommands() {
 }
 function execCommand(conn, command, flag) {
     return new Promise((resolve, reject) => {
-        print("log!", (flag ? "(?) " : "") + "$", command);
+        print("log!", (flag ? "(?) " : "") + "$", command, "\n");
         conn.exec(command, (err, stream) => {
             if (err) {
                 return reject(err);
@@ -49588,10 +49588,10 @@ function execCommand(conn, command, flag) {
                 }
             })
                 .on('data', (data) => {
-                print("log!", data.toString('utf8') + "\n");
+                print("log!", data.toString('utf8'), "\n");
             })
                 .stderr.on('data', (data) => {
-                print("error", data.toString('utf8') + "\n");
+                print("log!", data.toString('utf8'), "\n");
             });
         });
     });

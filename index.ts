@@ -345,7 +345,7 @@ async function executeSshCommands() {
 
 function execCommand(conn: Client, command: string, flag?: string): Promise<number> {
     return new Promise((resolve, reject) => {
-        print("log!", (flag ? "(?) " : "") + "$", command);
+        print("log!", (flag ? "(?) " : "") + "$", command, "\n");
         conn.exec(command, (err: Error | undefined, stream: ClientChannel) => {
             if (err) {
                 return reject(err);
@@ -360,10 +360,10 @@ function execCommand(conn: Client, command: string, flag?: string): Promise<numb
                     }
                 })
                 .on('data', (data: Buffer) => {
-                    print("log!", data.toString('utf8') + "\n");
+                    print("log!", data.toString('utf8'), "\n");
                 })
                 .stderr.on('data', (data: Buffer) => {
-                    print("error", data.toString('utf8') + "\n");
+                    print("log!", data.toString('utf8'), "\n");
                 });
         });
     });
