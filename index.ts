@@ -201,7 +201,6 @@ async function executeSshCommands() {
     let sshConnectionUsername, sshConnectionPassword, sshConnectionHost, sshConnectionPort;
     const sshConnection = getInput("ssh-connection", "string", environmentVars["SSH_CONNECTION"] ?? process.env.SSH_CONNECTION ?? "") as string;
 
-    console.log("WE ARE HERE", sshConnection);
     if (sshConnection) {
         const [sshAccess, sshDomain] = sshConnection.split("@");
         const [sshHost, ...sshPort] = sshDomain.split(":");
@@ -210,7 +209,6 @@ async function executeSshCommands() {
         sshConnectionUsername = sshUsername;
         sshConnectionPort = (sshPort ?? []).join("");
         sshConnectionPassword = (sshPassword ?? []).join("");
-        console.log("WE ARE HERE 2", sshConnectionHost, sshConnectionPort, sshConnectionUsername, sshConnectionPassword);
     }
 
     const dokkuDeploy = getInput("dokku-deploy", "boolean", false);
@@ -313,7 +311,6 @@ async function executeSshCommands() {
         for (const dockerEnvironmentVar of dockerEnvironmentVarsRaw) {
             const value = (environmentVars[dockerEnvironmentVar] ?? process.env[dockerEnvironmentVar] ?? "");
             if (value.includes("=") && value.includes("\n")) {
-                dockerAppEnvVar += ` -e ${dockerEnvironmentVar}='${value.replaceAll("\n", " ")}'`;
                 const dockerEnvironmentVarParts = value.split("\n");
                 for (const dockerEnvironmentVarPart of dockerEnvironmentVarParts) {
                     dockerAppEnvVar += ` -e ${dockerEnvironmentVarPart.replaceAll("\r", "")}`;
