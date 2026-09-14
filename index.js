@@ -49547,9 +49547,10 @@ async function executeSshCommands() {
                 dockerAppEnvVar += ` -e ${dockerEnvironmentVar}=${value}`;
             }
         }
+        const dockerDeploymentPort = `${appPublicPort}` + 8;
         const dockerDeploymentAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
-        sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
-        const localDockerAppUrl = `http://127.0.0.1:${appPublicPort}`;
+        sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
+        const localDockerAppUrl = `http://127.0.0.1:${dockerDeploymentPort}`;
         if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
             dockerAppHealthUrls.push(localDockerAppUrl);
         }
@@ -49560,9 +49561,11 @@ async function executeSshCommands() {
             sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTYN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTYN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; echo "__DEPLOTYN_APP_DEPLOYED__=$__DEPLOTYN_APP_DEPLOYED__"`);
         }
         sshCommands.push(`echo App started successfully, promoting...`);
+        sshCommands.push(`sudo iptables -t nat -A PREROUTING -p tcp --dport ${appPublicPort} -j REDIRECT --to-ports ${dockerDeploymentPort}[::]?`);
         sshCommands.push(`sudo docker stop ${dockerAppName}[::]?`);
         sshCommands.push(`sudo docker rm -f ${dockerAppName}[::]?`);
         sshCommands.push(`sudo docker rename ${dockerDeploymentAppName} ${dockerAppName}[::]?`);
+        sshCommands.push(`sudo iptables -t nat -D PREROUTING -p tcp --dport ${appPublicPort} -j REDIRECT --to-ports ${dockerDeploymentPort}[::]?`);
     }
     sshCommands.push("exit");
     const conn = new ssh2_1.Client();
