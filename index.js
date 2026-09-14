@@ -49535,9 +49535,10 @@ async function executeSshCommands() {
             sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
         }
         let dockerAppEnvVar = "";
+        console.log("THE VALUES ARE ---- OMG", dockerEnvironmentVarsRaw);
         for (const dockerEnvironmentVar of dockerEnvironmentVarsRaw) {
             const value = (environmentVars[dockerEnvironmentVar] ?? process.env[dockerEnvironmentVar] ?? "");
-            console.log("THE VALUES ARE ----", value);
+            console.log("THE VALUES ARE ----", dockerEnvironmentVar, value);
             if (value.includes("=") && value.includes("\n")) {
                 const dockerEnvironmentVarParts = value.split("\n");
                 for (const dockerEnvironmentVarPart of dockerEnvironmentVarParts) {
