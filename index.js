@@ -49550,10 +49550,7 @@ async function executeSshCommands() {
                 if (!commandString)
                     break;
                 const [command, flag] = commandString.split("[::]");
-                const { stdout, exitCode } = await execCommand(conn, command, flag);
-                if (stdout) {
-                    print("log!", stdout);
-                }
+                const exitCode = await execCommand(conn, command, flag);
                 if (exitCode !== 0 && flag !== "?") {
                     print("error", `Closed with code - ${exitCode}`);
                     core.setFailed(`${exitCode}`);
@@ -49576,28 +49573,25 @@ async function executeSshCommands() {
 }
 function execCommand(conn, command, flag) {
     return new Promise((resolve, reject) => {
+        print("log!", (flag ? "(?) " : "") + "$", command);
         conn.exec(command, (err, stream) => {
             if (err) {
                 return reject(err);
             }
-            let stdout = '';
-            let stderr = '';
-            let exitCode = 0;
             stream
                 .on('close', (code) => {
-                exitCode = code;
                 if (flag === "?" || code === 0) {
-                    resolve({ stdout: stdout.trim(), stderr: stderr.trim(), exitCode });
+                    resolve(code);
                 }
                 else {
-                    reject(new Error(`Command "${command}" exited with code ${code}\nStderr: ${stderr.trim()}`));
+                    reject(code);
                 }
             })
                 .on('data', (data) => {
-                stdout += data.toString('utf8');
+                print("log!", data.toString('utf8'));
             })
                 .stderr.on('data', (data) => {
-                stderr += data.toString('utf8');
+                print("error", data.toString('utf8'));
             });
         });
     });
