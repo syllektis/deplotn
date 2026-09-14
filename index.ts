@@ -266,9 +266,13 @@ async function executeSshCommands() {
     let dockerAppName = appName;
     if (dockerDeploy) {
         dockerAppName = getInput("docker-app-name", "string", dockerAppName);
-        const dockerImageNoCache = getInput("docker-image-nocache", "boolean", false);
+        const dockerImageNoCache = getInput("docker-image-nocache", "boolean", true);
+        const dockerAppHealthCheck = getInput("docker-app-health-check", "boolean", true);
         const dockerRegistries = (getInput("docker-registries", "array", []) as string[]);
+        const dockerAppHealthUrls = (getInput("docker-app-health-urls", "array", []) as string[]);
         const dockerImageLocation = getInput("docker-image-location", "string", environmentVars["DOCKER_IMAGE_LOCATION"] ?? process.env.DOCKER_IMAGE_LOCATION ?? "");
+        const dockerAppHealthWaitTime = getInput("docker-app-health-wait-time", "number", environmentVars["DOCKER_APP_HEALTH_WAIT_TIME"] ?? process.env.DOCKER_APP_HEALTH_WAIT_TIME ??  5);
+        const dockerAppHealthMaxCheck = getInput("docker-app-health-max-check", "number", environmentVars["DOCKER_APP_HEALTH_MAX_CHECK"] ?? process.env.DOCKER_APP_HEALTH_MAX_CHECK ??  12);
 
         for (const dockerRegistry of dockerRegistries) {
             const parts = dockerRegistry.split("|");
@@ -289,7 +293,16 @@ async function executeSshCommands() {
         if (dockerImageLocation) {
             sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
         }
-        sshCommands.push(`sudo docker run -d $DOCKER_ENVS --name ${dockerAppName}_deploying -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
+        const realDockerAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
+        sshCommands.push(`sudo docker run -d $DOCKER_ENVS --name ${realDockerAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
+
+        if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
+            dockerAppHealthUrls.push(`http://127.0.0.1:${appPublicPort}`);
+        }
+        for (const dockerAppHealthUrl of dockerAppHealthUrls) {
+            sshCommands.push(`Checking if app has been successfully deployed...`);
+            sshCommands.push(`URL="${dockerAppHealthUrl}"; for i in {1..12}; do curl -sf "$URL" > /dev.null && echo "App is UP!" && break || (echo "Waiting for $URL... ($i/12)" && sleep 5); done`);
+        }
     }
 
     sshCommands.push("exit");
@@ -322,7 +335,7 @@ async function executeSshCommands() {
             do {
                 let commandString = sshCommandsQueue.dequeue();
                 if (!commandString) break;
-                const [ command, flag ] = commandString.split("[::]");
+                const [command, flag] = commandString.split("[::]");
                 const exitCode = await execCommand(conn, command, flag);
                 if (exitCode !== 0 && flag !== "?") {
                     print("error", `Closed with code - ${exitCode}`);

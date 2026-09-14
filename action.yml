@@ -88,6 +88,21 @@ inputs:
     description: "Flag to indicate if to remove the app existing image before pulling a new image"
     required: false
     default: true
+  docker-app-health-check:
+    description: "Flag to indicate if to validate the app is running before ending the deployment process"
+    required: false
+    default: true
+  docker-app-health-wait-time:
+    description: "Number of seconds to wait between the app uptime and health check validation. Default to 5 seconds"
+    required: false
+    default: 5
+  docker-app-health-max-check:
+    description: "Number of time to validate the app uptime and health check. If value is 12, the app health is checked every 5 seconds 12 times, so it check for a total of 60 seconds"
+    required: false
+    default: 12
+  docker-app-health-urls:
+    description: "List of custom urls to check if reachable to validate the app update. Override the default generated"
+    required: false
 
   # ssh setup
   ssh-host: 
