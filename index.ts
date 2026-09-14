@@ -319,8 +319,8 @@ async function executeSshCommands() {
                 dockerAppEnvVar += ` -e ${dockerEnvironmentVar}=${value}`;
             }
         }
-        const realDockerAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
-        sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${realDockerAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
+        const dockerDeploymentAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
+        sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
 
         const localDockerAppUrl = `http://127.0.0.1:${appPublicPort}`;
         if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
@@ -332,8 +332,9 @@ async function executeSshCommands() {
             sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTYN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTYN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; echo "__DEPLOTYN_APP_DEPLOYED__=$__DEPLOTYN_APP_DEPLOYED__"`);
         }
         sshCommands.push(`echo App started successfully, promoting...`);
-        sshCommands.push(`sudo docker stop ${realDockerAppName}[::]?`);
-        sshCommands.push(`sudo docker rm -f ${realDockerAppName}[::]?`);
+        sshCommands.push(`sudo docker stop ${dockerAppName}[::]?`);
+        sshCommands.push(`sudo docker rm -f ${dockerAppName}[::]?`);
+        sshCommands.push(`sudo docker rename ${dockerDeploymentAppName} ${dockerAppName}[::]?`);
     }
 
     sshCommands.push("exit");
