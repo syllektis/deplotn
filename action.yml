@@ -105,6 +105,9 @@ inputs:
     required: false
 
   # ssh setup
+  ssh-connection: 
+    description: "One-line connection string for ssh. e.g. username:password@host:port"
+    required: false
   ssh-host: 
     description: "The SSH server host"
     required: false
@@ -132,6 +135,9 @@ inputs:
     default: 10
   ssh-expose-vars: 
     description: "The variables to expose to the ssh shell"
+    required: false
+  docker-app-env-vars: 
+    description: "The variables to include in the docker app start command"
     required: false
   
   # apache2 setup

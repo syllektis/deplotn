@@ -198,15 +198,28 @@ async function executeSshCommands() {
         }
     }
 
+    let sshConnectionUsername, sshConnectionPassword, sshConnectionHost, sshConnectionPort;
+    const sshConnection = getInput("ssh-connection", "string", environmentVars["SSH_CONNECTION"] ?? process.env.SSH_CONNECTION ?? "") as string;
+
+    if (sshConnection) {
+        const [sshAccess, sshDomain] = sshConnection.split("@");
+        const [sshHost, ...sshPort] = sshDomain.split(":");
+        const [sshUsername, ...sshPassword] = sshAccess.split(":");
+        sshConnectionHost = sshHost;
+        sshConnectionUsername = sshUsername;
+        sshConnectionPort = (sshPort ?? []).join("");
+        sshConnectionPassword = (sshPassword ?? []).join("");
+    }
+
     const dokkuDeploy = getInput("dokku-deploy", "boolean", false);
     const dockerDeploy = getInput("docker-deploy", "boolean", false);
-    const sshHost = getInput("ssh-host", "string", environmentVars["SSH_HOST"] ?? process.env.SSH_HOST ?? "");
-    const sshPort = getInput("ssh-port", "string", environmentVars["SSH_PORT"] ?? process.env.SSH_PORT ?? "");
-    const sshCommands = environmentVarsSshCommands.concat((getInput("ssh-commands", "array", []) as string[]).map((c) => `${c}[::]?`));
-    const sshUsername = getInput("ssh-username", "string", environmentVars["SSH_USERNAME"] ?? process.env.SSH_USERNAME ?? "");
-    const sshPassword = getInput("ssh-password", "string", environmentVars["SSH_PASSWORD"] ?? process.env.SSH_PASSWORD ?? "");
+    const sshHost = getInput("ssh-host", "string", environmentVars["SSH_HOST"] ?? process.env.SSH_HOST ?? sshConnectionHost ?? "");
+    const sshPort = getInput("ssh-port", "string", environmentVars["SSH_PORT"] ?? process.env.SSH_PORT ?? sshConnectionPort ?? "");
     const sshPassphrase = getInput("ssh-passphrase", "string", environmentVars["SSH_PASSPHRASE"] ?? process.env.SSH_PASSPHRASE ?? "");
     const sshPrivateKey = getInput("ssh-privatekey", "string", environmentVars["SSH_PRIVATEKEY"] ?? process.env.SSH_PRIVATEKEY ?? "");
+    const sshCommands = environmentVarsSshCommands.concat((getInput("ssh-commands", "array", []) as string[]).map((c) => `${c}[::]?`));
+    const sshUsername = getInput("ssh-username", "string", environmentVars["SSH_USERNAME"] ?? process.env.SSH_USERNAME ?? sshConnectionUsername ?? "");
+    const sshPassword = getInput("ssh-password", "string", environmentVars["SSH_PASSWORD"] ?? process.env.SSH_PASSWORD ?? sshConnectionPassword ?? "");
 
     if (!sshHost || !sshCommands.length) {
         return;
@@ -269,10 +282,11 @@ async function executeSshCommands() {
         const dockerImageNoCache = getInput("docker-image-nocache", "boolean", true);
         const dockerAppHealthCheck = getInput("docker-app-health-check", "boolean", true);
         const dockerRegistries = (getInput("docker-registries", "array", []) as string[]);
+        const dockerEnvironmentVarsRaw = getInput("docker-app-env-vars", "array", []) as string[];
         const dockerAppHealthUrls = (getInput("docker-app-health-urls", "array", []) as string[]);
         const dockerImageLocation = getInput("docker-image-location", "string", environmentVars["DOCKER_IMAGE_LOCATION"] ?? process.env.DOCKER_IMAGE_LOCATION ?? "");
-        const dockerAppHealthWaitTime = getInput("docker-app-health-wait-time", "number", environmentVars["DOCKER_APP_HEALTH_WAIT_TIME"] ?? process.env.DOCKER_APP_HEALTH_WAIT_TIME ??  5);
-        const dockerAppHealthMaxCheck = getInput("docker-app-health-max-check", "number", environmentVars["DOCKER_APP_HEALTH_MAX_CHECK"] ?? process.env.DOCKER_APP_HEALTH_MAX_CHECK ??  12);
+        const dockerAppHealthWaitTime = getInput("docker-app-health-wait-time", "number", environmentVars["DOCKER_APP_HEALTH_WAIT_TIME"] ?? process.env.DOCKER_APP_HEALTH_WAIT_TIME ?? 5);
+        const dockerAppHealthMaxCheck = getInput("docker-app-health-max-check", "number", environmentVars["DOCKER_APP_HEALTH_MAX_CHECK"] ?? process.env.DOCKER_APP_HEALTH_MAX_CHECK ?? 12);
 
         for (const dockerRegistry of dockerRegistries) {
             const parts = dockerRegistry.split("|");
@@ -293,8 +307,21 @@ async function executeSshCommands() {
         if (dockerImageLocation) {
             sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
         }
+        let dockerAppEnvVar = "";
+        for (const dockerEnvironmentVar of dockerEnvironmentVarsRaw) {
+            const value = (environmentVars[dockerEnvironmentVar] ?? process.env[dockerEnvironmentVar] ?? "");
+            if (value.includes("=") && value.includes("\n")) {
+                dockerAppEnvVar += ` -e ${dockerEnvironmentVar}='${value.replaceAll("\n", " ")}'`;
+                const dockerEnvironmentVarParts = value.split("\n");
+                for (const dockerEnvironmentVarPart of dockerEnvironmentVarParts) {
+                    dockerAppEnvVar += ` -e ${dockerEnvironmentVarPart.replaceAll("\r", "")}`;
+                }
+            } else {
+                dockerAppEnvVar += ` -e ${dockerEnvironmentVar}=${value}`;
+            }
+        }
         const realDockerAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
-        sshCommands.push(`sudo docker run -d $DOCKER_ENVS --name ${realDockerAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
+        sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${realDockerAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
 
         if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
             dockerAppHealthUrls.push(`http://127.0.0.1:${appPublicPort}`);
