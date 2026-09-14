@@ -49549,11 +49549,14 @@ async function executeSshCommands() {
         }
         const realDockerAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
         sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${realDockerAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
+        const localDockerAppUrl = `http://127.0.0.1:${appPublicPort}`;
         if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
-            dockerAppHealthUrls.push(`http://127.0.0.1:${appPublicPort}`);
+            dockerAppHealthUrls.push(localDockerAppUrl);
         }
-        for (const dockerAppHealthUrl of dockerAppHealthUrls) {
-            sshCommands.push(`echo Checking if app has been successfully deployed...`);
+        sshCommands.push(`echo Checking if app has been successfully deployed...`);
+        for (let dockerAppHealthUrl of dockerAppHealthUrls) {
+            if (dockerAppHealthUrl.startsWith("/"))
+                dockerAppHealthUrl = localDockerAppUrl + dockerAppHealthUrl;
             sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTYN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTYN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; echo "__DEPLOTYN_APP_DEPLOYED__=$__DEPLOTYN_APP_DEPLOYED__"`);
         }
     }
