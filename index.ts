@@ -372,6 +372,7 @@ interface CommandResult {
 }
 
 function execCommand(conn: Client, command: string, flag?: string): Promise<CommandResult> {
+    console.log("COMMANDO ---- ", command, flag);
     return new Promise((resolve, reject) => {
         conn.exec(command, (err: Error | undefined, stream: ClientChannel) => {
             if (err) {
@@ -388,6 +389,7 @@ function execCommand(conn: Client, command: string, flag?: string): Promise<Comm
                     if (flag === "?" || code === 0) {
                         resolve({ stdout: stdout.trim(), stderr: stderr.trim(), exitCode });
                     } else {
+                        console.log("FAILING ----", command);
                         reject(
                             new Error(
                                 `Command "${command}" exited with code ${code}\nStderr: ${stderr.trim()}`
