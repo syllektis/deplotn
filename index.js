@@ -49569,27 +49569,6 @@ async function executeSshCommands() {
             conn.end();
             clearTimeout(waiter);
         }
-        conn.shell((err, stream) => {
-            if (err)
-                throw err;
-            stream.on('close', (code, signal) => {
-                if (code !== 0) {
-                    print("error", `SSH:Shell:: closed with code - ${code} - ${signal}`);
-                    core.setFailed(`${code}`);
-                }
-                conn.end();
-            }).on('data', (data) => {
-                print("log!", `${data}`);
-                if (`${data}`.includes("logout")) {
-                    clearTimeout(waiter);
-                }
-                else if (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login")) {
-                    sshCommandsQueue.dequeue(stream.write.bind(stream), "\n");
-                }
-            }).stderr.on('data', (data) => {
-                print("error", `${data}`);
-            });
-        });
     }).on('error', (err) => {
         print("error", `Connection Error: ${err}`);
         core.setFailed(`-900`);
