@@ -202,7 +202,7 @@ async function executeSshCommands() {
     const dockerDeploy = getInput("docker-deploy", "boolean", false);
     const sshHost = getInput("ssh-host", "string", environmentVars["SSH_HOST"] ?? process.env.SSH_HOST ?? "");
     const sshPort = getInput("ssh-port", "string", environmentVars["SSH_PORT"] ?? process.env.SSH_PORT ?? "");
-    const sshCommands = environmentVarsSshCommands.concat(getInput("ssh-commands", "array", []) as string[]);
+    const sshCommands = environmentVarsSshCommands.concat((getInput("ssh-commands", "array", []) as string[]).map((c) => `${c}[::]?`));
     const sshUsername = getInput("ssh-username", "string", environmentVars["SSH_USERNAME"] ?? process.env.SSH_USERNAME ?? "");
     const sshPassword = getInput("ssh-password", "string", environmentVars["SSH_PASSWORD"] ?? process.env.SSH_PASSWORD ?? "");
     const sshPassphrase = getInput("ssh-passphrase", "string", environmentVars["SSH_PASSPHRASE"] ?? process.env.SSH_PASSPHRASE ?? "");
