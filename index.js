@@ -49588,10 +49588,10 @@ function execCommand(conn, command, flag) {
                 }
             })
                 .on('data', (data) => {
-                print("log!", data.toString('utf8'));
+                print("log!", data.toString('utf8') + "\n");
             })
                 .stderr.on('data', (data) => {
-                print("error", data.toString('utf8'));
+                print("error", data.toString('utf8') + "\n");
             });
         });
     });

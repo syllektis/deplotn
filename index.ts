@@ -360,10 +360,10 @@ function execCommand(conn: Client, command: string, flag?: string): Promise<numb
                     }
                 })
                 .on('data', (data: Buffer) => {
-                    print("log!", data.toString('utf8'));
+                    print("log!", data.toString('utf8') + "\n");
                 })
                 .stderr.on('data', (data: Buffer) => {
-                    print("error", data.toString('utf8'));
+                    print("error", data.toString('utf8') + "\n");
                 });
         });
     });
