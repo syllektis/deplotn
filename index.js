@@ -49400,7 +49400,7 @@ async function executeSshCommands() {
     const environmentVarsRaw = getInput("ssh-expose-vars", "array", []);
     const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix") ?? "";
     const environmentVarsReadPrefix = executeInstruction(expandVariables(environmentVarsReadPrefixRaw), environmentCasing);
-    const environmentVars = ["SSH_HOST", "SSH_PORT", "SSH_USERNAME", "SSH_PASSWORD", "SSH_PRIVATEKEY"].concat(...environmentVarsRaw).reduce((acc, key) => {
+    const environmentVars = ["SSH_HOST", "SSH_PORT", "SSH_USERNAME", "SSH_PASSWORD", "SSH_PRIVATEKEY", "SSH_CONNECTION"].concat(...environmentVarsRaw).reduce((acc, key) => {
         let instruction = "";
         if (key.includes("|")) {
             const [_key, _instruction] = key.split("|");
