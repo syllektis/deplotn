@@ -49554,7 +49554,7 @@ async function executeSshCommands() {
                 if (stdout) {
                     print("log!", stdout);
                 }
-                if (flag === "?" && exitCode !== 0) {
+                if (exitCode !== 0 && flag !== "?") {
                     print("error", `Closed with code - ${exitCode}`);
                     core.setFailed(`${exitCode}`);
                     break;

@@ -325,7 +325,7 @@ async function executeSshCommands() {
                 const [ command, flag ] = commandString.split("[::]");
                 const { stdout, exitCode } = await execCommand(conn, command, flag);
                 if (stdout) { print("log!", stdout); }
-                if (flag === "?" && exitCode !== 0) {
+                if (exitCode !== 0 && flag !== "?") {
                     print("error", `Closed with code - ${exitCode}`);
                     core.setFailed(`${exitCode}`);
                     break;
