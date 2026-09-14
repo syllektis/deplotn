@@ -49561,11 +49561,12 @@ async function executeSshCommands() {
             sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTYN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTYN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; echo "__DEPLOTYN_APP_DEPLOYED__=$__DEPLOTYN_APP_DEPLOYED__"`);
         }
         sshCommands.push(`echo App started successfully, promoting...`);
-        sshCommands.push(`sudo iptables -t nat -A PREROUTING -p tcp --dport ${appPublicPort} -j REDIRECT --to-ports ${dockerDeploymentPort}[::]?`);
-        sshCommands.push(`sudo docker stop ${dockerAppName}[::]?`);
-        sshCommands.push(`sudo docker rm -f ${dockerAppName}[::]?`);
-        sshCommands.push(`sudo docker rename ${dockerDeploymentAppName} ${dockerAppName}[::]?`);
-        sshCommands.push(`sudo iptables -t nat -D PREROUTING -p tcp --dport ${appPublicPort} -j REDIRECT --to-ports ${dockerDeploymentPort}[::]?`);
+        const fastRestartScript = `bash -lc '
+            sudo docker rm -f ${dockerAppName} && \
+            sudo docker run -d ${dockerAppEnvVar} --name ${dockerAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation} && \
+            sudo docker rm -f ${dockerDeploymentAppName} 
+        '`;
+        sshCommands.push(fastRestartScript);
     }
     sshCommands.push("exit");
     const conn = new ssh2_1.Client();
