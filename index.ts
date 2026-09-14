@@ -310,15 +310,18 @@ async function executeSshCommands() {
         let dockerAppEnvVar = "";
         for (const dockerEnvironmentVar of dockerEnvironmentVarsRaw) {
             const value = (environmentVars[dockerEnvironmentVar] ?? process.env[dockerEnvironmentVar] ?? "");
+            console.log("THE VALUES ARE ----", value);
             if (value.includes("=") && value.includes("\n")) {
                 const dockerEnvironmentVarParts = value.split("\n");
                 for (const dockerEnvironmentVarPart of dockerEnvironmentVarParts) {
+                    console.log("THE VALUES ARE ----", dockerEnvironmentVarPart);
                     dockerAppEnvVar += ` -e ${dockerEnvironmentVarPart.replaceAll("\r", "")}`;
                 }
             } else {
                 dockerAppEnvVar += ` -e ${dockerEnvironmentVar}=${value}`;
             }
         }
+        console.log("THE VALUES ARE ---- FINAL", dockerAppEnvVar);
         const realDockerAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
         sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${realDockerAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
 
