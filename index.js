@@ -49547,7 +49547,7 @@ async function executeSshCommands() {
                 dockerAppEnvVar += ` -e ${dockerEnvironmentVar}=${value}`;
             }
         }
-        const dockerDeploymentPort = `${appPublicPort}` + 8;
+        const dockerDeploymentPort = `65505`;
         const dockerDeploymentAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
         sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
         const localDockerAppUrl = `http://127.0.0.1:${dockerDeploymentPort}`;
