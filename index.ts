@@ -284,7 +284,7 @@ async function executeSshCommands() {
         }
 
         if (dockerImageNoCache) {
-            sshCommands.push(`sudo docker rmi ${dockerImageLocation}`);
+            sshCommands.push(`sudo docker rmi ${dockerImageLocation}[::]?`);
         }
         if (dockerImageLocation) {
             sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
@@ -320,11 +320,11 @@ async function executeSshCommands() {
 
         try {
             do {
-                let command = sshCommandsQueue.dequeue();
-                if (!command) break;
-                const { stderr, stdout, exitCode } = await execCommand(conn, command);
+                let commandString = sshCommandsQueue.dequeue();
+                if (!commandString) break;
+                const [ command, flag ] = commandString.split("[::]");
+                const { stdout, exitCode } = await execCommand(conn, command, flag);
                 if (stdout) { print("log!", stdout); }
-                if (stderr) { print("error", stderr); }
                 if (exitCode !== 0) {
                     print("error", `Closed with code - ${exitCode}`);
                     core.setFailed(`${exitCode}`);
@@ -371,7 +371,7 @@ interface CommandResult {
     exitCode: number;
 }
 
-function execCommand(conn: Client, command: string): Promise<CommandResult> {
+function execCommand(conn: Client, command: string, flag?: string): Promise<CommandResult> {
     return new Promise((resolve, reject) => {
         conn.exec(command, (err: Error | undefined, stream: ClientChannel) => {
             if (err) {
@@ -385,7 +385,7 @@ function execCommand(conn: Client, command: string): Promise<CommandResult> {
             stream
                 .on('close', (code: number) => {
                     exitCode = code;
-                    if (code === 0) {
+                    if (flag === "?" || code === 0) {
                         resolve({ stdout: stdout.trim(), stderr: stderr.trim(), exitCode });
                     } else {
                         reject(

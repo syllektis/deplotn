@@ -49513,7 +49513,7 @@ async function executeSshCommands() {
             sshCommands.push(`sudo echo "${password.join("")}" | docker login ${domain} -u ${username} --password-stdin`);
         }
         if (dockerImageNoCache) {
-            sshCommands.push(`sudo docker rmi ${dockerImageLocation}`);
+            sshCommands.push(`sudo docker rmi ${dockerImageLocation}[::]?`);
         }
         if (dockerImageLocation) {
             sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
@@ -49546,15 +49546,13 @@ async function executeSshCommands() {
         }, sshRuntimeMinutes * 60 * 1000);
         try {
             do {
-                let command = sshCommandsQueue.dequeue();
-                if (!command)
+                let commandString = sshCommandsQueue.dequeue();
+                if (!commandString)
                     break;
-                const { stderr, stdout, exitCode } = await execCommand(conn, command);
+                const [command, flag] = commandString.split("[::]");
+                const { stdout, exitCode } = await execCommand(conn, command, flag);
                 if (stdout) {
                     print("log!", stdout);
-                }
-                if (stderr) {
-                    print("error", stderr);
                 }
                 if (exitCode !== 0) {
                     print("error", `Closed with code - ${exitCode}`);
@@ -49597,7 +49595,7 @@ async function executeSshCommands() {
         core.setFailed(`-900`);
     }).connect(connPayload);
 }
-function execCommand(conn, command) {
+function execCommand(conn, command, flag) {
     return new Promise((resolve, reject) => {
         conn.exec(command, (err, stream) => {
             if (err) {
@@ -49609,7 +49607,7 @@ function execCommand(conn, command) {
             stream
                 .on('close', (code) => {
                 exitCode = code;
-                if (code === 0) {
+                if (flag === "?" || code === 0) {
                     resolve({ stdout: stdout.trim(), stderr: stderr.trim(), exitCode });
                 }
                 else {
