@@ -308,7 +308,7 @@ async function executeSshCommands() {
             sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
         }
         let dockerAppEnvVar = "";
-        console.log("THE VALUES ARE ---- OMG", dockerEnvironmentVarsRaw);
+        console.log("THE VALUES ARE ---- OMG", dockerEnvironmentVarsRaw, "---------", environmentVars);
         for (const dockerEnvironmentVar of dockerEnvironmentVarsRaw) {
             const value = (environmentVars[dockerEnvironmentVar] ?? process.env[dockerEnvironmentVar] ?? "");
             console.log("THE VALUES ARE ----", dockerEnvironmentVar, value);
