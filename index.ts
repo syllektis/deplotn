@@ -301,7 +301,7 @@ async function executeSshCommands() {
         }
         for (const dockerAppHealthUrl of dockerAppHealthUrls) {
             sshCommands.push(`echo Checking if app has been successfully deployed...`);
-            sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTYN_APP_DEPLOYED__=0; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTYN_APP_DEPLOYED__=1 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; echo "__DEPLOTYN_APP_DEPLOYED__=$__DEPLOTYN_APP_DEPLOYED__"`);
+            sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTYN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTYN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; echo "__DEPLOTYN_APP_DEPLOYED__=$__DEPLOTYN_APP_DEPLOYED__"`);
         }
     }
 
@@ -373,10 +373,10 @@ function execCommand(conn: Client, command: string, flag?: string): Promise<numb
                     }
                 })
                 .on('data', (data: Buffer) => {
-                    print("log!", data.toString('utf8'), "\n");
+                    print("log!", data.toString('utf8'));
                 })
                 .stderr.on('data', (data: Buffer) => {
-                    print("log!", data.toString('utf8'), "\n");
+                    print("log!", data.toString('utf8'));
                 });
         });
     });
