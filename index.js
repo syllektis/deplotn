@@ -49241,10 +49241,10 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const fs = __importStar(__nccwpck_require__(9896));
-const ssh2_1 = __nccwpck_require__(5472);
 const process = __importStar(__nccwpck_require__(932));
 const core = __importStar(__nccwpck_require__(7484));
 const child_process_1 = __nccwpck_require__(5317);
+const ssh2_1 = __nccwpck_require__(5472);
 let __TEST_OBJECT = null;
 let verbose;
 let __ENVIRONMENT_VARS = {};
@@ -49252,29 +49252,21 @@ class MicroQueue {
     constructor(elements) {
         this.elements = elements;
     }
-    dequeue(suffix) {
+    size() {
+        return this.elements.length;
+    }
+    dequeue(fn, suffix) {
         if (this.elements.length === 0) {
             return undefined;
         }
-        let command = "";
-        let terminator = "";
         let element = this.elements.shift();
         if (element) {
-            if (typeof element === "string" && element.includes("[::]")) {
-                const elementParts = element.split("[::]");
-                element = elementParts[0];
-                if (elementParts.length > 1) {
-                    terminator = elementParts[1];
-                }
-            }
             if (suffix)
                 element += suffix;
-            command = element;
+            if (fn)
+                fn(element);
         }
-        return {
-            command,
-            terminator
-        };
+        return element;
     }
 }
 async function main(argc, argv) {
@@ -49426,26 +49418,30 @@ async function executeSshCommands() {
     }, {});
     const environmentVarsSshCommands = [];
     for (const environmentVar of environmentVarsRaw) {
-        /*const value = (environmentVars[environmentVar] ?? process.env[environmentVar] ?? "");
+        const value = (environmentVars[environmentVar] ?? process.env[environmentVar] ?? "");
         if (value.includes("=") && value.includes("\n")) {
             environmentVarsSshCommands.push(`export ${environmentVar}='` + value.replaceAll("\n", " ") + `'`);
             const environmentVarParts = value.split("\n");
             for (const environmentVarPart of environmentVarParts) {
                 environmentVarsSshCommands.push(`export ${environmentVarPart.replaceAll("\r", "")}`);
             }
-        } else {
+        }
+        else {
             environmentVarsSshCommands.push(`export ${environmentVar}=` + value);
-        }*/
+        }
     }
     const dokkuDeploy = getInput("dokku-deploy", "boolean", false);
     const dockerDeploy = getInput("docker-deploy", "boolean", false);
     const sshHost = getInput("ssh-host", "string", environmentVars["SSH_HOST"] ?? process.env.SSH_HOST ?? "");
     const sshPort = getInput("ssh-port", "string", environmentVars["SSH_PORT"] ?? process.env.SSH_PORT ?? "");
-    const sshCommands = environmentVarsSshCommands.concat(getInput("ssh-commands_", "array", []));
+    const sshCommands = environmentVarsSshCommands.concat(getInput("ssh-commands", "array", []));
     const sshUsername = getInput("ssh-username", "string", environmentVars["SSH_USERNAME"] ?? process.env.SSH_USERNAME ?? "");
     const sshPassword = getInput("ssh-password", "string", environmentVars["SSH_PASSWORD"] ?? process.env.SSH_PASSWORD ?? "");
     const sshPassphrase = getInput("ssh-passphrase", "string", environmentVars["SSH_PASSPHRASE"] ?? process.env.SSH_PASSPHRASE ?? "");
     const sshPrivateKey = getInput("ssh-privatekey", "string", environmentVars["SSH_PRIVATEKEY"] ?? process.env.SSH_PRIVATEKEY ?? "");
+    if (!sshHost || !sshCommands.length) {
+        return;
+    }
     const port = getInput("port", "string", environmentVars["PORT"] ?? process.env.PORT ?? "");
     const appName = getInput("app-name", "string", environmentVars["APP_NAME"] ?? process.env.APP_NAME ?? "");
     const environment = getInput("environment", "string", environmentVars["ENVIRONMENT"] ?? process.env.ENVIRONMENT ?? "");
@@ -49514,18 +49510,15 @@ async function executeSshCommands() {
             const domain = registryParts[registryParts.length - 1];
             const access = registryParts.slice(0, registryParts.length - 1);
             const [username, ...password] = access.join("@").split(":");
-            sshCommands.push(`sudo echo "${password.join("")}" | docker login ${domain} -u ${username} --password-stdin [::]login`);
+            sshCommands.push(`sudo echo "${password.join("")}" | docker login ${domain} -u ${username} --password-stdin`);
         }
         if (dockerImageNoCache) {
-            sshCommands.push(`sudo docker rmi ${dockerImageLocation} [::]such image`);
+            sshCommands.push(`sudo docker rmi ${dockerImageLocation}`);
         }
         if (dockerImageLocation) {
-            //sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
+            sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
         }
-        //sshCommands.push(`sudo docker run -d $DOCKER_ENVS --name ${dockerAppName}_deploying -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
-    }
-    if (!sshHost || !sshCommands.length) {
-        return;
+        sshCommands.push(`sudo docker run -d $DOCKER_ENVS --name ${dockerAppName}_deploying -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
     }
     sshCommands.push("exit");
     const conn = new ssh2_1.Client();
@@ -49545,15 +49538,42 @@ async function executeSshCommands() {
     if (sshPrivateKey) {
         connPayload.privateKey = sshPrivateKey;
     }
-    conn.on('ready', () => {
-        let commandTerminator = "";
+    conn.on('ready', async () => {
+        const waiter = setTimeout(() => {
+            conn.end();
+            core.setFailed(`-901`);
+            print("log", `Force closing the ssh shell after ${sshRuntimeMinutes} minutes\n`);
+        }, sshRuntimeMinutes * 60 * 1000);
+        try {
+            do {
+                let command = sshCommandsQueue.dequeue();
+                if (!command)
+                    break;
+                const { stderr, stdout, exitCode } = await execCommand(conn, command);
+                if (stdout) {
+                    print("log!", stdout);
+                }
+                if (stderr) {
+                    print("error", stderr);
+                }
+                if (exitCode !== 0) {
+                    print("error", `Closed with code - ${exitCode}`);
+                    core.setFailed(`${exitCode}`);
+                    break;
+                }
+            } while (sshCommandsQueue.size() > 0);
+        }
+        catch (error) {
+            const err = error;
+            print("error", `Execution Failed: ${err}`);
+        }
+        finally {
+            conn.end();
+            clearTimeout(waiter);
+        }
         conn.shell((err, stream) => {
             if (err)
                 throw err;
-            const waiter = setTimeout(() => {
-                stream.write("exit\n");
-                print("log", `Force closing the ssh shell after ${sshRuntimeMinutes} minutes\n`);
-            }, sshRuntimeMinutes * 60 * 1000);
             stream.on('close', (code, signal) => {
                 if (code !== 0) {
                     print("error", `SSH:Shell:: closed with code - ${code} - ${signal}`);
@@ -49565,22 +49585,45 @@ async function executeSshCommands() {
                 if (`${data}`.includes("logout")) {
                     clearTimeout(waiter);
                 }
-                else if ((`${data}`.toLowerCase().includes(commandTerminator)) || (`${data}`.toLowerCase() === ("\n"))) {
-                    // skip
-                }
-                else if ((!commandTerminator && (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login")))) {
-                    console.log("Existing terminator ---", commandTerminator);
-                    const { command, terminator } = sshCommandsQueue.dequeue("\n") ?? {};
-                    commandTerminator = (terminator ?? "").toLowerCase();
-                    if (command) {
-                        stream.write.bind(stream)(command);
-                    }
+                else if (`${data}`.includes("~#") || `${data}`.includes("~$") || `${data}`.includes("Last login")) {
+                    sshCommandsQueue.dequeue(stream.write.bind(stream), "\n");
                 }
             }).stderr.on('data', (data) => {
                 print("error", `${data}`);
             });
         });
+    }).on('error', (err) => {
+        print("error", `Connection Error: ${err}`);
+        core.setFailed(`-900`);
     }).connect(connPayload);
+}
+function execCommand(conn, command) {
+    return new Promise((resolve, reject) => {
+        conn.exec(command, (err, stream) => {
+            if (err) {
+                return reject(err);
+            }
+            let stdout = '';
+            let stderr = '';
+            let exitCode = 0;
+            stream
+                .on('close', (code) => {
+                exitCode = code;
+                if (code === 0) {
+                    resolve({ stdout: stdout.trim(), stderr: stderr.trim(), exitCode });
+                }
+                else {
+                    reject(new Error(`Command "${command}" exited with code ${code}\nStderr: ${stderr.trim()}`));
+                }
+            })
+                .on('data', (data) => {
+                stdout += data.toString('utf8');
+            })
+                .stderr.on('data', (data) => {
+                stderr += data.toString('utf8');
+            });
+        });
+    });
 }
 function executeInstruction(value, instruction) {
     if (instruction === "UPPER")
