@@ -49529,7 +49529,7 @@ async function executeSshCommands() {
         }
         for (const dockerAppHealthUrl of dockerAppHealthUrls) {
             sshCommands.push(`Checking if app has been successfully deployed...`);
-            sshCommands.push(`URL="${dockerAppHealthUrl}"; for i in {1..12}; do curl -sf "$URL" > /dev.null && echo "App is UP!" && break || (echo "Waiting for $URL... ($i/12)" && sleep 5); done`);
+            sshCommands.push(`URL="${dockerAppHealthUrl}"; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && echo "App is UP!" && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done`);
         }
     }
     sshCommands.push("exit");
