@@ -49399,8 +49399,9 @@ async function executeSshCommands() {
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
     const environmentVarsRaw = getInput("ssh-expose-vars", "array", []);
     const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix") ?? "";
+    const dockerEnvironmentVarsRaw = getInput("docker-app-env-vars", "array", []);
     const environmentVarsReadPrefix = executeInstruction(expandVariables(environmentVarsReadPrefixRaw), environmentCasing);
-    const environmentVars = ["SSH_HOST", "SSH_PORT", "SSH_USERNAME", "SSH_PASSWORD", "SSH_PRIVATEKEY", "SSH_CONNECTION"].concat(...environmentVarsRaw).reduce((acc, key) => {
+    const environmentVars = ["SSH_HOST", "SSH_PORT", "SSH_USERNAME", "SSH_PASSWORD", "SSH_PRIVATEKEY", "SSH_CONNECTION"].concat(...environmentVarsRaw).concat(...dockerEnvironmentVarsRaw).reduce((acc, key) => {
         let instruction = "";
         if (key.includes("|")) {
             const [_key, _instruction] = key.split("|");
@@ -49510,7 +49511,6 @@ async function executeSshCommands() {
         const dockerImageNoCache = getInput("docker-image-nocache", "boolean", true);
         const dockerAppHealthCheck = getInput("docker-app-health-check", "boolean", true);
         const dockerRegistries = getInput("docker-registries", "array", []);
-        const dockerEnvironmentVarsRaw = getInput("docker-app-env-vars", "array", []);
         const dockerAppHealthUrls = getInput("docker-app-health-urls", "array", []);
         const dockerImageLocation = getInput("docker-image-location", "string", environmentVars["DOCKER_IMAGE_LOCATION"] ?? process.env.DOCKER_IMAGE_LOCATION ?? "");
         const dockerAppHealthWaitTime = getInput("docker-app-health-wait-time", "number", environmentVars["DOCKER_APP_HEALTH_WAIT_TIME"] ?? process.env.DOCKER_APP_HEALTH_WAIT_TIME ?? 5);
@@ -49535,14 +49535,11 @@ async function executeSshCommands() {
             sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
         }
         let dockerAppEnvVar = "";
-        console.log("THE VALUES ARE ---- OMG", dockerEnvironmentVarsRaw, "---------", environmentVars);
         for (const dockerEnvironmentVar of dockerEnvironmentVarsRaw) {
             const value = (environmentVars[dockerEnvironmentVar] ?? process.env[dockerEnvironmentVar] ?? "");
-            console.log("THE VALUES ARE ----", dockerEnvironmentVar, value);
             if (value.includes("=") && value.includes("\n")) {
                 const dockerEnvironmentVarParts = value.split("\n");
                 for (const dockerEnvironmentVarPart of dockerEnvironmentVarParts) {
-                    console.log("THE VALUES ARE ----", dockerEnvironmentVarPart);
                     dockerAppEnvVar += ` -e ${dockerEnvironmentVarPart.replaceAll("\r", "")}`;
                 }
             }
@@ -49550,7 +49547,6 @@ async function executeSshCommands() {
                 dockerAppEnvVar += ` -e ${dockerEnvironmentVar}=${value}`;
             }
         }
-        console.log("THE VALUES ARE ---- FINAL", dockerAppEnvVar);
         const realDockerAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
         sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${realDockerAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`);
         if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
