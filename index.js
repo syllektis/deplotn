@@ -49554,7 +49554,7 @@ async function executeSshCommands() {
                 if (stdout) {
                     print("log!", stdout);
                 }
-                if (exitCode !== 0) {
+                if (flag === "?" && exitCode !== 0) {
                     print("error", `Closed with code - ${exitCode}`);
                     core.setFailed(`${exitCode}`);
                     break;
@@ -49596,7 +49596,6 @@ async function executeSshCommands() {
     }).connect(connPayload);
 }
 function execCommand(conn, command, flag) {
-    console.log("COMMANDO ---- ", command, flag);
     return new Promise((resolve, reject) => {
         conn.exec(command, (err, stream) => {
             if (err) {
@@ -49612,7 +49611,6 @@ function execCommand(conn, command, flag) {
                     resolve({ stdout: stdout.trim(), stderr: stderr.trim(), exitCode });
                 }
                 else {
-                    console.log("FAILING ----", command);
                     reject(new Error(`Command "${command}" exited with code ${code}\nStderr: ${stderr.trim()}`));
                 }
             })
