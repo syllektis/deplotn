@@ -146,7 +146,7 @@ inputs:
   
   # apache2 setup
   apache2-configure: 
-    description: "Flag to indicate if to enable apache2 configuration
+    description: "Flag to indicate if to enable apache2 configuration"
     required: false
     default: false
   apache2-config-path: 
@@ -164,7 +164,7 @@ inputs:
   apache2-add-env-to-domain: 
     description: "Flag to indicate to add the environment to the apache2 domain name e.g. appname.$ENV.basedomain"
     required: false
-    default: true
+    default: false
   apache2-app-name:
     description: "Name of the app/service for use when configuring the page. Defaults to app-name"
     required: false
