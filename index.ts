@@ -407,7 +407,7 @@ async function executeSshCommands() {
             const [firstDomain, ...otherDomains] = apache2DomainNames;
             configContent = `<VirtualHost *:80>
     ${apache2DomainNames?.length > 0 ? "ServerName " : ""}${apache2DomainNames?.length > 0 ? firstDomain : ""}
-    ${otherDomains?.length > 1 ? "ServerAlias " : ""}${otherDomains.map((d) => (`${d} `))}
+    ${otherDomains?.length > 0 ? "ServerAlias " : ""}${otherDomains.map((d) => (`${d} `))}
 
     ServerAdmin ${apache2AppConfServerAdmin}
 
