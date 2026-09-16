@@ -49445,6 +49445,7 @@ async function executeSshCommands() {
     const dokkuDeploy = getInput("dokku-deploy", "boolean", false);
     const dockerDeploy = getInput("docker-deploy", "boolean", false);
     const apache2Configure = getInput("apache2-configure", "boolean", false);
+    const sshPostCommands = getInput("ssh-post-commands", "array", []);
     const sshHost = getInput("ssh-host", "string", environmentVars["SSH_HOST"] ?? process.env.SSH_HOST ?? sshConnectionHost ?? "");
     const sshPort = getInput("ssh-port", "string", environmentVars["SSH_PORT"] ?? process.env.SSH_PORT ?? sshConnectionPort ?? "");
     const sshPassphrase = getInput("ssh-passphrase", "string", environmentVars["SSH_PASSPHRASE"] ?? process.env.SSH_PASSPHRASE ?? "");
@@ -49601,13 +49602,16 @@ async function executeSshCommands() {
         let apache2ServerConfigPath = "/etc/apache2/sites-available/";
         const apache2DomainNames = [];
         apache2AppName = getInput("apache2-app-name", "string", apache2AppName);
-        const apache2ConfigureDomain = getInput("apache2-configure-domain", "boolean", true);
+        const apache2SetupSsl = getInput("apache2-setup-ssl", "boolean", false);
         const apache2Domains = getInput("apache2-domains", "array", []);
+        const apache2ConfigureDomain = getInput("apache2-configure-domain", "boolean", true);
         const apache2AddEnvToDomain = getInput("apache2-add-env-to-domain", "boolean", true);
+        const apache2AppConfServerAdmin = getInput("apache2-conf-server-admin", "string", "deplotn@getnada.com");
         const apache2ConfigPath = getInput("apache2-config-path", "string", environmentVars["APACHE2_CONFIG_PATH"] ?? process.env.APACHE2_CONFIG_PATH ?? "");
         const apache2BaseDomain = getInput("apache2-base-domain", "string", environmentVars["APACHE2_BASE_DOMAIN"] ?? process.env.APACHE2_BASE_DOMAIN ?? baseDomain);
         const apache2Environment = getInput("apache2-environment", "string", environmentVars["APACHE2_ENVIRONMENT"] ?? process.env.APACHE2_ENVIRONMENT ?? environment);
-        apache2ServerConfigPath += apache2AppName + ".conf";
+        let apacheConfFileName = apache2AppName + ".conf";
+        apache2ServerConfigPath += apacheConfFileName;
         if (apache2BaseDomain && apache2ConfigureDomain) {
             apache2DomainNames.push(`${apache2AppName}.${apache2AddEnvToDomain && apache2Environment ? (apache2Environment + ".") : ""}${apache2BaseDomain}`);
         }
@@ -49622,13 +49626,16 @@ async function executeSshCommands() {
         }
         if (apache2ConfigPath) {
             const configContent = fs.readFileSync(apache2ConfigPath, 'utf8');
-            console.log("THE CONFIG CONTENT:;" + configContent);
-            console.log("PRINT TO :;" + apache2ServerConfigPath);
             sshCommands.push(`echo Preparing apache2 configuration...`);
             sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
             sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\n`);
         }
+        if (apache2SetupSsl) {
+            sshCommands.push(`sudo certbot --apache ${apache2DomainNames.map((d) => (`-d ${d}`))} --non-interactive --agree-tos -m ${apache2AppConfServerAdmin} --expand`);
+        }
+        sshCommands.push(`sudo a2enmod proxy proxy_http headers; sudo a2ensite ${apacheConfFileName}; sudo systemctl reload apache2; sudo systemctl restart apache2`);
     }
+    sshPostCommands.forEach((c) => sshCommands.push(`${c}[::]?`));
     sshCommands.push("exit");
     const conn = new ssh2_1.Client();
     console.log("SSH Commands:", sshCommands);

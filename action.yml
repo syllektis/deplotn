@@ -133,6 +133,9 @@ inputs:
   ssh-commands: 
     description: "Commands to execute in the ssh shell"
     required: false
+  ssh-post-commands: 
+    description: "Commands to execute after all other commands in the ssh shell"
+    required: false
   ssh-runtime-minutes: 
     description: "Force close the ssh after the specified minutes to prevent indefinite pipeline execution"
     required: false
@@ -152,6 +155,9 @@ inputs:
   apache2-config-path: 
     description: "Relative path in the repo where the apache2 config file is located for the deployed app"
     required: false
+  apache2-conf-server-admin: 
+    description: "The server admin value for apache2 configuration e.g webmaster@yourdomain.com"
+    required: false
   apache2-configure-domain: 
     description: "Flag to indicate if to configure domain name for the app if using apache server"
     required: false
@@ -167,6 +173,13 @@ inputs:
     default: false
   apache2-app-name:
     description: "Name of the app/service for use when configuring the page. Defaults to app-name"
+    required: false
+  apache2-setup-ssl: 
+    description: "Flag to indicate to configure the SSL for the apache configured domains"
+    required: false
+    default: false
+  apache2-conf-server-admin: 
+    description: "The server admin value for apache2 configuration e.g webmaster@yourdomain.com"
     required: false
   
   # dokku setup
