@@ -471,6 +471,7 @@ async function executeSshCommands() {
         } catch (error) {
             const err = error as Error;
             print("error", `Execution Failed: ${err}`);
+            core.setFailed(`${err}`);
         } finally {
             conn.end();
             clearTimeout(waiter);
