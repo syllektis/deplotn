@@ -155,9 +155,6 @@ inputs:
   apache2-config-path: 
     description: "Relative path in the repo where the apache2 config file is located for the deployed app"
     required: false
-  apache2-conf-server-admin: 
-    description: "The server admin value for apache2 configuration e.g webmaster@yourdomain.com"
-    required: false
   apache2-configure-domain: 
     description: "Flag to indicate if to configure domain name for the app if using apache server"
     required: false
