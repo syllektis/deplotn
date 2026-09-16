@@ -181,6 +181,9 @@ inputs:
     description: "Flag to indicate to configure the SSL for the apache configured domains"
     required: false
     default: false
+  apache2-domains: 
+    description: "The domains for the apache2 configuration"
+    required: false
   apache2-conf-server-admin: 
     description: "The server admin value for apache2 configuration e.g webmaster@yourdomain.com"
     required: false
