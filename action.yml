@@ -178,7 +178,7 @@ inputs:
     description: "Name of the app/service for use when configuring the page. Defaults to app-name"
     required: false
   apache2-setup-ssl: 
-    description: "Flag to indicate to configure the SSL for the apache configured domains"
+    description: "Flag to indicate to configure the SSL for the apache configured domains using the certbot command(s)"
     required: false
     default: false
   apache2-domains: 

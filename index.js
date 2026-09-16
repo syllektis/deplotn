@@ -49699,6 +49699,7 @@ async function executeSshCommands() {
         catch (error) {
             const err = error;
             print("error", `Execution Failed: ${err}`);
+            core.setFailed(`${err}`);
         }
         finally {
             conn.end();
