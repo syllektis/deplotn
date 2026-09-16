@@ -152,11 +152,17 @@ inputs:
     description: "Flag to indicate if to enable apache2 configuration"
     required: false
     default: false
+  apache2-environment: 
+    description: "The environment to prefix to base domain for apache2 config, e.g apache2-environment=prod domain is app-name.prod.base-domain, defaults to environment or ENVIRONMENT variable"
+    required: false
   apache2-config-path: 
     description: "Relative path in the repo where the apache2 config file is located for the deployed app"
     required: false
   apache2-configure-domain: 
     description: "Flag to indicate if to configure domain name for the app if using apache server"
+    required: false
+  apache2-configure-domain-www: 
+    description: "Flag to indicate if to configure domain name with www. prefix for the app if using apache server"
     required: false
   apache2-domain: 
     description: "List of domain name to configure for the deployed app. e.g. name.domain.com, name.domain.com|environment"
@@ -167,7 +173,7 @@ inputs:
   apache2-add-env-to-domain: 
     description: "Flag to indicate to add the environment to the apache2 domain name e.g. appname.$ENV.basedomain"
     required: false
-    default: false
+    default: true
   apache2-app-name:
     description: "Name of the app/service for use when configuring the page. Defaults to app-name"
     required: false
