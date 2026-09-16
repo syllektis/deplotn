@@ -230,8 +230,26 @@ async function executeSshCommands() {
     const environment = getInput("environment", "string", environmentVars["ENVIRONMENT"] ?? process.env.ENVIRONMENT ?? "");
     const containerPort = getInput("container-port", "string", environmentVars["CONTAINER_PORT"] ?? process.env.CONTAINER_PORT ?? port);
     console.log("SSH Variables:", "Host=" + sshHost, "Port=" + sshPort, "Username=" + sshUsername, "Password=" + (sshPassword ?? "*")[0] + "*******");
-    const appPublicPort = getInput("app-public-port", "string", environmentVars["APP_PUBLIC_PORT"] ?? process.env.APP_PUBLIC_PORT ?? containerPort ?? port);
+    let appPublicPortRaw = getInput("app-public-port", "any", environmentVars["APP_PUBLIC_PORT"] ?? process.env.APP_PUBLIC_PORT ?? containerPort ?? port);
 
+    // RESOLVE PORTS
+    let appPublicPort;
+    let commonAppPublicPort;
+    let portParts = appPublicPortRaw.split(__TEST_OBJECT ? "\\n" : '\n');
+    for (const portPart of portParts) {
+        const portPartParts = portPart.split("|");
+        if (portPartParts.length < 2) {
+            commonAppPublicPort = portPartParts[0];
+            continue;
+        }
+        if (environment === portPartParts[1]) {
+            appPublicPort = portPartParts[0];
+            break;
+        }
+    }
+    if (!appPublicPort) appPublicPort = commonAppPublicPort ?? appPublicPortRaw;
+
+    // DOKKU
     if (dokkuDeploy) {
         const dokkuSetupSsl = getInput("dokku-setup-ssl", "boolean", false);
         const dokkuDomains = (getInput("dokku-domains", "array", []) as string[]);
@@ -277,6 +295,7 @@ async function executeSshCommands() {
         sshCommands.push(`dokku ps:rebuild ${dokkuAppName}`);
     }
 
+    // DOCKER
     let dockerAppName = appName;
     if (dockerDeploy) {
         dockerAppName = getInput("docker-app-name", "string", dockerAppName);
@@ -346,6 +365,8 @@ async function executeSshCommands() {
             sshCommands.push(actualDockerAppStartCommand);
         }
     }
+
+    // APACHE2
 
     sshCommands.push("exit");
 

@@ -9,9 +9,13 @@ inputs:
   app-name: 
     description: "The name of your application after deployment"
     required: true
+  app-public-port: 
+    description: "The list of public ports for each environment"
+    required: false
   verbose: 
     description: "Print out as much log as possible for debugging"
     required: false
+
   # environment
   environment: 
     description: "Deployment environment"
