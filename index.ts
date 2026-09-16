@@ -378,15 +378,19 @@ async function executeSshCommands() {
         const apache2Domains = (getInput("apache2-domains", "array", []) as string[]);
         const apache2ConfigureDomain = getInput("apache2-configure-domain", "boolean", true);
         const apache2AddEnvToDomain = getInput("apache2-add-env-to-domain", "boolean", true);
-        const apache2AppConfServerAdmin = getInput("apache2-conf-server-admin", "string", "deplotn@getnada.com");
+        const apache2ConfigureDomainWww = getInput("apache2-configure-domain-www", "boolean", true);
         const apache2ConfigPath = getInput("apache2-config-path", "string", environmentVars["APACHE2_CONFIG_PATH"] ?? process.env.APACHE2_CONFIG_PATH ?? "");
         const apache2BaseDomain = getInput("apache2-base-domain", "string", environmentVars["APACHE2_BASE_DOMAIN"] ?? process.env.APACHE2_BASE_DOMAIN ?? baseDomain);
         const apache2Environment = getInput("apache2-environment", "string", environmentVars["APACHE2_ENVIRONMENT"] ?? process.env.APACHE2_ENVIRONMENT ?? environment);
+        const apache2AppConfServerAdmin = getInput("apache2-conf-server-admin", "string", environmentVars["APACHE2_CONF_SERVER_ADMIN"] ?? process.env.APACHE2_CONF_SERVER_ADMIN ?? "webmaster@yourdomain.com");
 
         let apacheConfFileName = apache2AppName + ".conf"
         apache2ServerConfigPath += apacheConfFileName;
         if (apache2BaseDomain && apache2ConfigureDomain) {
             apache2DomainNames.push(`${apache2AppName}.${apache2AddEnvToDomain && apache2Environment ? (apache2Environment + ".") : ""}${apache2BaseDomain}`);
+            if (apache2ConfigureDomainWww) {
+                apache2DomainNames.push(`www.${apache2AppName}.${apache2AddEnvToDomain && apache2Environment ? (apache2Environment + ".") : ""}${apache2BaseDomain}`);
+            }
         }
         for (const apache2Domain of apache2Domains) {
             const parts = apache2Domain.split("|");
@@ -396,12 +400,31 @@ async function executeSshCommands() {
             }
             apache2DomainNames.push(`${domain}`);
         }
+        let configContent = '';
         if (apache2ConfigPath) {
-            const configContent = fs.readFileSync(apache2ConfigPath, 'utf8');
+            configContent = fs.readFileSync(apache2ConfigPath, 'utf8');
+        } else {
+            const [firstDomain, ...otherDomains] = apache2DomainNames;
+            configContent = `<VirtualHost *:80>
+    ${apache2DomainNames?.length > 0 ? "ServerName " : ""}${apache2DomainNames?.length > 0 ? firstDomain : ""}
+    ${otherDomains?.length > 1 ? "ServerAlias " : ""}${otherDomains.map((d) => (`${d} `))}
+
+    ServerAdmin ${apache2AppConfServerAdmin}
+
+    ProxyPreserveHost On
+    ProxyRequests Off
+
+    ProxyPass / http://127.0.0.1:${appPublicPort}/
+    ProxyPassReverse / http://127.0.0.1:${appPublicPort}/
+</VirtualHost>`
+        }
+        if (configContent) {
             sshCommands.push(`echo Preparing apache2 configuration...`);
             sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
-            sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\n`);
+            sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\nEOF`);
         }
+        sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
+        sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\nEOF`);
         if (apache2SetupSsl) {
             sshCommands.push(`sudo certbot --apache ${apache2DomainNames.map((d) => (`-d ${d}`))} --non-interactive --agree-tos -m ${apache2AppConfServerAdmin} --expand`);
         }
