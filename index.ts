@@ -396,10 +396,15 @@ async function executeSshCommands() {
             const configContent = fs.readFileSync(apache2ConfigPath, 'utf8');
             console.log("THE CONFIG CONTENT:;" + configContent);
             console.log("PRINT TO :;" + apache2ServerConfigPath);
+            sshCommands.push(`echo Preparing apache2 configuration...`);
+            sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
+            sshCommands.push(`
+                sudo cat << EOF > ${apache2ServerConfigPath}
+                ${configContent}
+                EOF
+            `);
 
         }
-        sshCommands.push(`echo Preparing apache2 configuration...`);
-        sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
     }
 
     sshCommands.push("exit");
