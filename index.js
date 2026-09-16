@@ -49651,13 +49651,11 @@ async function executeSshCommands() {
             sshCommands.push(`echo Preparing apache2 configuration...`);
             sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
             sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\nEOF`);
+            if (apache2SetupSsl) {
+                sshCommands.push(`sudo certbot --apache ${apache2DomainNames.map((d) => (`-d ${d}`))} --non-interactive --agree-tos -m ${apache2AppConfServerAdmin} --expand`);
+            }
+            sshCommands.push(`sudo a2enmod proxy proxy_http headers; sudo a2ensite ${apacheConfFileName}; sudo systemctl reload apache2; sudo systemctl restart apache2`);
         }
-        sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
-        sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\nEOF`);
-        if (apache2SetupSsl) {
-            sshCommands.push(`sudo certbot --apache ${apache2DomainNames.map((d) => (`-d ${d}`))} --non-interactive --agree-tos -m ${apache2AppConfServerAdmin} --expand`);
-        }
-        sshCommands.push(`sudo a2enmod proxy proxy_http headers; sudo a2ensite ${apacheConfFileName}; sudo systemctl reload apache2; sudo systemctl restart apache2`);
     }
     sshPostCommands.forEach((c) => sshCommands.push(`${c}[::]?`));
     sshCommands.push("exit");
