@@ -384,7 +384,7 @@ async function executeSshCommands() {
         const apache2Environment = getInput("apache2-environment", "string", environmentVars["APACHE2_ENVIRONMENT"] ?? process.env.APACHE2_ENVIRONMENT ?? environment);
         const apache2AppConfServerAdmin = getInput("apache2-conf-server-admin", "string", environmentVars["APACHE2_CONF_SERVER_ADMIN"] ?? process.env.APACHE2_CONF_SERVER_ADMIN ?? "webmaster@yourdomain.com");
 
-        let apacheConfFileName = apache2AppName + ".conf"
+        let apacheConfFileName = `${apache2AppName}.${apache2Environment}.conf`
         apache2ServerConfigPath += apacheConfFileName;
         if (apache2BaseDomain && apache2ConfigureDomain) {
             apache2DomainNames.push(`${apache2AppName}.${apache2AddEnvToDomain && apache2Environment ? (apache2Environment + ".") : ""}${apache2BaseDomain}`);
