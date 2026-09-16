@@ -49626,11 +49626,7 @@ async function executeSshCommands() {
             console.log("PRINT TO :;" + apache2ServerConfigPath);
             sshCommands.push(`echo Preparing apache2 configuration...`);
             sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
-            sshCommands.push(`
-                sudo cat << EOF > ${apache2ServerConfigPath}
-                ${configContent}
-                EOF
-            `);
+            sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\n`);
         }
     }
     sshCommands.push("exit");
