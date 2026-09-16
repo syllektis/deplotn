@@ -214,6 +214,7 @@ async function executeSshCommands() {
 
     const dokkuDeploy = getInput("dokku-deploy", "boolean", false);
     const dockerDeploy = getInput("docker-deploy", "boolean", false);
+    const apache2Configure = getInput("apache2-configure", "boolean", false);
     const sshHost = getInput("ssh-host", "string", environmentVars["SSH_HOST"] ?? process.env.SSH_HOST ?? sshConnectionHost ?? "");
     const sshPort = getInput("ssh-port", "string", environmentVars["SSH_PORT"] ?? process.env.SSH_PORT ?? sshConnectionPort ?? "");
     const sshPassphrase = getInput("ssh-passphrase", "string", environmentVars["SSH_PASSPHRASE"] ?? process.env.SSH_PASSPHRASE ?? "");
@@ -227,6 +228,7 @@ async function executeSshCommands() {
     }
     const port = getInput("port", "string", environmentVars["PORT"] ?? process.env.PORT ?? "");
     const appName = getInput("app-name", "string", environmentVars["APP_NAME"] ?? process.env.APP_NAME ?? "");
+    const baseDomain = getInput("base-domain", "string", environmentVars["BASE_DOMAIN"] ?? process.env.BASE_DOMAIN ?? "");
     const environment = getInput("environment", "string", environmentVars["ENVIRONMENT"] ?? process.env.ENVIRONMENT ?? "");
     const containerPort = getInput("container-port", "string", environmentVars["CONTAINER_PORT"] ?? process.env.CONTAINER_PORT ?? port);
     console.log("SSH Variables:", "Host=" + sshHost, "Port=" + sshPort, "Username=" + sshUsername, "Password=" + (sshPassword ?? "*")[0] + "*******");
@@ -256,7 +258,6 @@ async function executeSshCommands() {
         const dokkuEnvironmentVars = getInput("dokku-environment-vars", "array", []);
         const dokkuAddEnvToDomain = getInput("dokku-add-env-to-domain", "boolean", true);
         const envIsNamespace = getInput("environment-is-image-namespace", "boolean", false);
-        const baseDomain = getInput("base-domain", "string", environmentVars["BASE_DOMAIN"] ?? process.env.BASE_DOMAIN ?? "");
         const registryHost = getInput("registry-host", "string", environmentVars["REGISTRY_HOST"] ?? process.env.REGISTRY_HOST ?? "");
         const dokkuAppName = getInput("dokku-app-name", "string", environmentVars["DOKKU_APP_NAME"] ?? process.env.DOKKU_APP_NAME ?? appName);
         const dockerImageTag = getInput("docker-image-tag", "string", environmentVars["DOCKER_IMAGE_TAG"] ?? process.env.DOCKER_IMAGE_TAG ?? "");
@@ -361,12 +362,45 @@ async function executeSshCommands() {
                 sudo docker rm -f ${dockerDeploymentAppName} 
             '`;
             sshCommands.push(fastRestartScript);
-        } else {   
+        } else {
             sshCommands.push(actualDockerAppStartCommand);
         }
     }
 
     // APACHE2
+    let apache2AppName = appName;
+    if (apache2Configure) {
+        let apache2ServerConfigPath = "/etc/apache2/sites-available/";
+        const apache2DomainNames: string[] = [];
+        apache2AppName = getInput("apache2-app-name", "string", apache2AppName);
+        const apache2ConfigureDomain = getInput("apache2-configure-domain", "boolean", true);
+        const apache2Domains = (getInput("apache2-domains", "array", []) as string[]);
+        const apache2AddEnvToDomain = getInput("apache2-add-env-to-domain", "boolean", true);
+        const apache2ConfigPath = getInput("apache2-config-path", "string", environmentVars["APACHE2_CONFIG_PATH"] ?? process.env.APACHE2_CONFIG_PATH ?? "");
+        const apache2BaseDomain = getInput("apache2-base-domain", "string", environmentVars["APACHE2_BASE_DOMAIN"] ?? process.env.APACHE2_BASE_DOMAIN ?? baseDomain);
+        const apache2Environment = getInput("apache2-environment", "string", environmentVars["APACHE2_ENVIRONMENT"] ?? process.env.APACHE2_ENVIRONMENT ?? environment);
+
+        apache2ServerConfigPath += apache2AppName + ".conf";
+        if (apache2BaseDomain && apache2ConfigureDomain) {
+            apache2DomainNames.push(`${apache2AppName}.${apache2AddEnvToDomain && apache2Environment ? (apache2Environment + ".") : ""}${apache2BaseDomain}`);
+        }
+        for (const apache2Domain of apache2Domains) {
+            const parts = apache2Domain.split("|");
+            const domain = parts[0];
+            if (parts.length > 1) {
+                if (environment !== parts[1]) continue;
+            }
+            apache2DomainNames.push(`${domain}`);
+        }
+        if (apache2ConfigPath) {
+            const configContent = fs.readFileSync(apache2ConfigPath, 'utf8');
+            console.log("THE CONFIG CONTENT:;" + configContent);
+            console.log("PRINT TO :;" + apache2ServerConfigPath);
+
+        }
+        sshCommands.push(`echo Preparing apache2 configuration...`);
+        sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
+    }
 
     sshCommands.push("exit");
 

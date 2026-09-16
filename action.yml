@@ -145,14 +145,28 @@ inputs:
     required: false
   
   # apache2 setup
+  apache2-configure: 
+    description: "Flag to indicate if to enable apache2 configuration
+    required: false
+    default: false
   apache2-config-path: 
     description: "Relative path in the repo where the apache2 config file is located for the deployed app"
     required: false
   apache2-configure-domain: 
     description: "Flag to indicate if to configure domain name for the app if using apache server"
     required: false
-  apache2-domain-names: 
+  apache2-domain: 
     description: "List of domain name to configure for the deployed app. e.g. name.domain.com, name.domain.com|environment"
+    required: false
+  apache2-base-domain: 
+    description: "Base domain for apache2 app, e.g apache2-base-domain=example.com domain is app-name.example.com, defaults to base-domain or BASE_DOMAIN variable"
+    required: false
+  apache2-add-env-to-domain: 
+    description: "Flag to indicate to add the environment to the apache2 domain name e.g. appname.$ENV.basedomain"
+    required: false
+    default: true
+  apache2-app-name:
+    description: "Name of the app/service for use when configuring the page. Defaults to app-name"
     required: false
   
   # dokku setup
@@ -188,7 +202,7 @@ inputs:
   dokku-add-env-to-domain: 
     description: "Flag to indicate to add the environment to the dokku domain name e.g. appname.$ENV.basedomain"
     required: false
-    default: false
+    default: true
 
 outputs:
   env-setup-completed:
