@@ -505,11 +505,7 @@ async function executeSshCommands() {
 
 function execCommand(conn: Client, command: string, flag?: string): Promise<number> {
     return new Promise((resolve, reject) => {
-        if (verbose) {
-            print("log!", (flag ? "(?) " : "") + "$", command, "\n");
-        } else {
-            print("log", (flag ? "(?) " : "") + "$");
-        }
+        print("log!", (flag ? "(?) " : "") + "$", (verbose ? command : command.split("").slice(0, 100).map((a) => (a == " " ? " " : "*")).join("").replaceAll("\n", "")), "\n");
         conn.exec(command, (err: Error | undefined, stream: ClientChannel) => {
             if (err) {
                 return reject(err);
