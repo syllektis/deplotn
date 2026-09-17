@@ -363,8 +363,10 @@ async function executeSshCommands() {
                             echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; 
                         }; 
                     done; 
-                    echo "Health check failed...";
-                    sudo docker logs ${dockerDeploymentAppName};
+                    if [ "$__DEPLOTN_APP_DEPLOYED__" -eq "1" ]; then
+                        echo "Health check failed...";
+                        sudo docker logs ${dockerDeploymentAppName};
+                    fi
                     exit $__DEPLOTN_APP_DEPLOYED__
                 `);
             }
