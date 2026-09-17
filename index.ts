@@ -306,6 +306,7 @@ async function executeSshCommands() {
         const dockerRegistries = (getInput("docker-registries", "array", []) as string[]);
         const dockerAppHealthUrls = (getInput("docker-app-health-urls", "array", []) as string[]);
         const dockerAppPrintLog = getInput("docker-app-print-log", "number", environmentVars["DOCKER_APP_PRINT_LOG"] ?? process.env.DOCKER_APP_PRINT_LOG ?? 100);
+        const dockerAppProcessWaitTime = getInput("docker-app-process-wait-time", "number", environmentVars["DOCKER_APP_PROCESS_WAIT_TIME"] ?? process.env.DOCKER_APP_PROCESS_WAIT_TIME ?? 10);
         const dockerImageLocation = getInput("docker-image-location", "string", environmentVars["DOCKER_IMAGE_LOCATION"] ?? process.env.DOCKER_IMAGE_LOCATION ?? "");
         const dockerAppHealthWaitTime = getInput("docker-app-health-wait-time", "number", environmentVars["DOCKER_APP_HEALTH_WAIT_TIME"] ?? process.env.DOCKER_APP_HEALTH_WAIT_TIME ?? 5);
         const dockerAppHealthMaxCheck = getInput("docker-app-health-max-check", "number", environmentVars["DOCKER_APP_HEALTH_MAX_CHECK"] ?? process.env.DOCKER_APP_HEALTH_MAX_CHECK ?? 12);
@@ -378,6 +379,8 @@ async function executeSshCommands() {
         } else {
             sshCommands.push(actualDockerAppStartCommand);
         }
+        sshCommands.push(`echo "Waiting for actual app to be up..."`);
+        sshCommands.push(`sleep ${dockerAppProcessWaitTime}`);
         if (dockerAppPrintLog && dockerAppPrintLog != "0") {
             sshCommands.push(`sudo docker logs -n ${dockerAppPrintLog} ${dockerAppName}`);
         }

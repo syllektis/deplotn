@@ -76,6 +76,10 @@ inputs:
     description: "The number of lines to print out for the newly deployed docker app. Default is 100"
     required: false
     default: 100
+  docker-app-process-wait-time: 
+    description: "The number of seconds to wait before validating actual app is running. Default is 10"
+    required: false
+    default: 10
   environment-is-image-namespace: 
     description: "Flag to indicate if the environment value is the same as the docker image name space"
     required: false
