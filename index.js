@@ -49582,7 +49582,7 @@ async function executeSshCommands() {
             for (let dockerAppHealthUrl of dockerAppHealthUrls) {
                 if (dockerAppHealthUrl.startsWith("/"))
                     dockerAppHealthUrl = localDockerAppUrl + dockerAppHealthUrl;
-                sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; exit $__DEPLOTN_APP_DEPLOYED__"`);
+                sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; exit $__DEPLOTN_APP_DEPLOYED__`);
             }
             sshCommands.push(`echo App started successfully, promoting...`);
             const fastRestartScript = `bash -lc '
