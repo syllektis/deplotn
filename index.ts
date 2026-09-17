@@ -388,8 +388,7 @@ async function executeSshCommands() {
 
     // APACHE2
     let apache2AppName = appName;
-    //if (apache2Configure) {
-    if (false) {
+    if (apache2Configure) {
         let apache2ServerConfigPath = "/etc/apache2/sites-available/";
         const apache2DomainNames: string[] = [];
         apache2AppName = getInput("apache2-app-name", "string", apache2AppName);
