@@ -49582,7 +49582,7 @@ async function executeSshCommands() {
             for (let dockerAppHealthUrl of dockerAppHealthUrls) {
                 if (dockerAppHealthUrl.startsWith("/"))
                     dockerAppHealthUrl = localDockerAppUrl + dockerAppHealthUrl;
-                sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTYN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTYN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; echo "__DEPLOTYN_APP_DEPLOYED__=$__DEPLOTYN_APP_DEPLOYED__"`);
+                sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; exit $__DEPLOTN_APP_DEPLOYED__"`);
             }
             sshCommands.push(`echo App started successfully, promoting...`);
             const fastRestartScript = `bash -lc '
@@ -49598,65 +49598,8 @@ async function executeSshCommands() {
     }
     // APACHE2
     let apache2AppName = appName;
-    if (apache2Configure) {
-        let apache2ServerConfigPath = "/etc/apache2/sites-available/";
-        const apache2DomainNames = [];
-        apache2AppName = getInput("apache2-app-name", "string", apache2AppName);
-        const apache2SetupSsl = getInput("apache2-setup-ssl", "boolean", false);
-        const apache2Domains = getInput("apache2-domains", "array", []);
-        const apache2ConfigureDomain = getInput("apache2-configure-domain", "boolean", true);
-        const apache2AddEnvToDomain = getInput("apache2-add-env-to-domain", "boolean", true);
-        const apache2ConfigureDomainWww = getInput("apache2-configure-domain-www", "boolean", true);
-        const apache2ConfigPath = getInput("apache2-config-path", "string", environmentVars["APACHE2_CONFIG_PATH"] ?? process.env.APACHE2_CONFIG_PATH ?? "");
-        const apache2BaseDomain = getInput("apache2-base-domain", "string", environmentVars["APACHE2_BASE_DOMAIN"] ?? process.env.APACHE2_BASE_DOMAIN ?? baseDomain);
-        const apache2Environment = getInput("apache2-environment", "string", environmentVars["APACHE2_ENVIRONMENT"] ?? process.env.APACHE2_ENVIRONMENT ?? environment);
-        const apache2AppConfServerAdmin = getInput("apache2-conf-server-admin", "string", environmentVars["APACHE2_CONF_SERVER_ADMIN"] ?? process.env.APACHE2_CONF_SERVER_ADMIN ?? "webmaster@yourdomain.com");
-        let apacheConfFileName = `${apache2AppName}-${apache2Environment}.conf`;
-        apache2ServerConfigPath += apacheConfFileName;
-        if (apache2BaseDomain && apache2ConfigureDomain) {
-            apache2DomainNames.push(`${apache2AppName}.${apache2AddEnvToDomain && apache2Environment ? (apache2Environment + ".") : ""}${apache2BaseDomain}`);
-            if (apache2ConfigureDomainWww) {
-                apache2DomainNames.push(`www.${apache2AppName}.${apache2AddEnvToDomain && apache2Environment ? (apache2Environment + ".") : ""}${apache2BaseDomain}`);
-            }
-        }
-        for (const apache2Domain of apache2Domains) {
-            const parts = apache2Domain.split("|");
-            const domain = parts[0];
-            if (parts.length > 1) {
-                if (environment !== parts[1])
-                    continue;
-            }
-            apache2DomainNames.push(`${domain}`);
-        }
-        let configContent = '';
-        if (apache2ConfigPath) {
-            configContent = fs.readFileSync(apache2ConfigPath, 'utf8');
-        }
-        else {
-            const [firstDomain, ...otherDomains] = apache2DomainNames;
-            configContent = `<VirtualHost *:80>
-    ${apache2DomainNames?.length > 0 ? "ServerName " : ""}${apache2DomainNames?.length > 0 ? firstDomain : ""}
-    ${otherDomains?.length > 0 ? "ServerAlias " : ""}${otherDomains.map((d) => (`${d}`)).join(" ")}
-
-    ServerAdmin ${apache2AppConfServerAdmin}
-
-    ProxyPreserveHost On
-    ProxyRequests Off
-
-    ProxyPass / http://127.0.0.1:${appPublicPort}/
-    ProxyPassReverse / http://127.0.0.1:${appPublicPort}/
-</VirtualHost>`;
-        }
-        if (configContent) {
-            sshCommands.push(`echo Preparing apache2 configuration...`);
-            sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
-            sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\nEOF`);
-            if (apache2SetupSsl) {
-                sshCommands.push(`sudo certbot --apache ${apache2DomainNames.map((d) => (`-d ${d}`)).join(" ")} --non-interactive --agree-tos --keep-until-expiring -m ${apache2AppConfServerAdmin} --expand`);
-            }
-            sshCommands.push(`sudo a2enmod proxy proxy_http headers; sudo a2ensite ${apacheConfFileName}; sudo systemctl reload apache2; sudo systemctl restart apache2`);
-        }
-    }
+    //if (apache2Configure) {
+    if (false) {}
     sshPostCommands.forEach((c) => sshCommands.push(`${c}[::]?`));
     sshCommands.push("exit");
     const conn = new ssh2_1.Client();

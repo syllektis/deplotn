@@ -354,7 +354,7 @@ async function executeSshCommands() {
             sshCommands.push(`echo Checking if app has been successfully deployed...`);
             for (let dockerAppHealthUrl of dockerAppHealthUrls) {
                 if (dockerAppHealthUrl.startsWith("/")) dockerAppHealthUrl = localDockerAppUrl + dockerAppHealthUrl;
-                sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTYN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTYN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; echo "__DEPLOTYN_APP_DEPLOYED__=$__DEPLOTYN_APP_DEPLOYED__"`);
+                sshCommands.push(`URL="${dockerAppHealthUrl}"; __DEPLOTN_APP_DEPLOYED__=1; for i in {1..${dockerAppHealthMaxCheck}}; do curl -sf "$URL" > /dev/null && __DEPLOTN_APP_DEPLOYED__=0 && break || { echo "Waiting for $URL... ($i/${dockerAppHealthMaxCheck})"; sleep ${dockerAppHealthWaitTime}; }; done; exit $__DEPLOTN_APP_DEPLOYED__"`);
             }
             sshCommands.push(`echo App started successfully, promoting...`);
             const fastRestartScript = `bash -lc '
@@ -370,7 +370,8 @@ async function executeSshCommands() {
 
     // APACHE2
     let apache2AppName = appName;
-    if (apache2Configure) {
+    //if (apache2Configure) {
+    if (false) {
         let apache2ServerConfigPath = "/etc/apache2/sites-available/";
         const apache2DomainNames: string[] = [];
         apache2AppName = getInput("apache2-app-name", "string", apache2AppName);
@@ -425,7 +426,9 @@ async function executeSshCommands() {
             if (apache2SetupSsl) {
                 sshCommands.push(`sudo certbot --apache ${apache2DomainNames.map((d) => (`-d ${d}`)).join(" ")} --non-interactive --agree-tos --keep-until-expiring -m ${apache2AppConfServerAdmin} --expand`);
             }
-            sshCommands.push(`sudo a2enmod proxy proxy_http headers; sudo a2ensite ${apacheConfFileName}; sudo systemctl reload apache2; sudo systemctl restart apache2`);
+            sshCommands.push(`sudo a2enmod proxy proxy_http headers`);
+            sshCommands.push(`sudo a2ensite ${apacheConfFileName}`);
+            sshCommands.push(`sudo systemctl reload apache2`);
         }
     }
 
