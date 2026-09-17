@@ -6,8 +6,8 @@ import { spawn } from "child_process";
 import * as github from "@actions/github";
 import { Client, ConnectConfig, ClientChannel } from 'ssh2';
 
+let verbose: boolean = false;
 let __TEST_OBJECT: any = null;
-let verbose: undefined | boolean;
 let __ENVIRONMENT_VARS: { [key: string]: string; } = {};
 
 class MicroQueue<T> {
@@ -55,7 +55,6 @@ async function main(argc: number, argv: string[]) {
 async function prepareEnvironmentVars() {
     const environmentOutput = getInput("environment-output", "boolean");
     if (!environmentOutput) return;
-    const verbose = getInput("verbose");
     const environment = getInput("environment", "string", "main");
     const environmentVarsRaw = getInput("environment-vars", "array") as string[];
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
@@ -504,7 +503,11 @@ async function executeSshCommands() {
 
 function execCommand(conn: Client, command: string, flag?: string): Promise<number> {
     return new Promise((resolve, reject) => {
-        print("log!", (flag ? "(?) " : "") + "$", command, "\n");
+        if (verbose) {
+            print("log!", (flag ? "(?) " : "") + "$", command, "\n");
+        } else {
+            print("log", (flag ? "(?) " : "") + "$");
+        }
         conn.exec(command, (err: Error | undefined, stream: ClientChannel) => {
             if (err) {
                 return reject(err);
@@ -579,9 +582,6 @@ function print(action: "log" | "log!" | "error" = "log", ...content: any[]) {
     if (action === "log!") {
         process.stdout.write(content.join(" "));
         return;
-    }
-    if (verbose === undefined) {
-        verbose = !!getInput("verbose");
     }
     if (!verbose) return;
     console[action](...content);

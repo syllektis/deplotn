@@ -49245,8 +49245,8 @@ const process = __importStar(__nccwpck_require__(932));
 const core = __importStar(__nccwpck_require__(7484));
 const child_process_1 = __nccwpck_require__(5317);
 const ssh2_1 = __nccwpck_require__(5472);
+let verbose = false;
 let __TEST_OBJECT = null;
-let verbose;
 let __ENVIRONMENT_VARS = {};
 class MicroQueue {
     constructor(elements) {
@@ -49289,7 +49289,6 @@ async function prepareEnvironmentVars() {
     const environmentOutput = getInput("environment-output", "boolean");
     if (!environmentOutput)
         return;
-    const verbose = getInput("verbose");
     const environment = getInput("environment", "string", "main");
     const environmentVarsRaw = getInput("environment-vars", "array");
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
@@ -49732,7 +49731,12 @@ async function executeSshCommands() {
 }
 function execCommand(conn, command, flag) {
     return new Promise((resolve, reject) => {
-        print("log!", (flag ? "(?) " : "") + "$", command, "\n");
+        if (verbose) {
+            print("log!", (flag ? "(?) " : "") + "$", command, "\n");
+        }
+        else {
+            print("log", (flag ? "(?) " : "") + "$");
+        }
         conn.exec(command, (err, stream) => {
             if (err) {
                 return reject(err);
@@ -49813,9 +49817,6 @@ function print(action = "log", ...content) {
     if (action === "log!") {
         process.stdout.write(content.join(" "));
         return;
-    }
-    if (verbose === undefined) {
-        verbose = !!getInput("verbose");
     }
     if (!verbose)
         return;
