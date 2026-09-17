@@ -49574,6 +49574,7 @@ async function executeSshCommands() {
         if (performDockerAppHealthCheck) {
             const dockerDeploymentPort = getRandomElement(generateWithinRange(60000, 65530, getRandomInt(1, 4)));
             const dockerDeploymentAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
+            sshCommands.push(`sudo docker rm -f ${dockerDeploymentAppName}[::]?`);
             sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
             const localDockerAppUrl = `http://127.0.0.1:${dockerDeploymentPort}`;
             if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
@@ -49607,6 +49608,7 @@ async function executeSshCommands() {
             sshCommands.push(fastRestartScript);
         }
         else {
+            sshCommands.push(`sudo docker rm -f ${dockerAppName}[::]?`);
             sshCommands.push(actualDockerAppStartCommand);
         }
         sshCommands.push(`echo "Waiting for actual app to be up..."`);
