@@ -49273,7 +49273,7 @@ async function main(argc, argv) {
     if (argv.includes("--test")) {
         setupTest(argc, argv);
     }
-    verbose = !!getInput("verbose");
+    verbose = getInput("verbose", "boolean", false);
     if (process.env.REPO_VARS) {
         let parsed = JSON.parse(process.env.REPO_VARS);
         Object.keys(parsed).forEach((k) => {
