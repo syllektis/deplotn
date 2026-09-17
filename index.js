@@ -49313,15 +49313,15 @@ async function prepareEnvironmentVars() {
             acc[environmentVarsWritePrefix + k] = environmentVars[k];
             return acc;
         }, {});
-        console.log("ENV=", environment);
-        console.log("ENV-CASING=", environmentCasing);
-        console.log("ENV-VARS-READ-PREFIX - (PRE)=", environmentVarsReadPrefixRaw);
-        console.log("ENV-VARS-READ-PREFIX - (POST)=", environmentVarsReadPrefix);
-        console.log("ENV-VARS-WRITE-PREFIX - (PRE)=", environmentVarsWritePrefixRaw);
-        console.log("ENV-VARS-WRITE-PREFIX - (POST)=", environmentVarsWritePrefix);
-        console.log("ENV-VARS= (PRE)", environmentVarsRaw);
-        console.log("ENV-VARS= (POST)", environmentVars);
-        console.log("ENV-VARS-OUTPUT=", environmentVarsOutputs);
+        print("log", "ENV=", environment);
+        print("log", "ENV-CASING=", environmentCasing);
+        print("log", "ENV-VARS-READ-PREFIX - (PRE)=", environmentVarsReadPrefixRaw);
+        print("log", "ENV-VARS-READ-PREFIX - (POST)=", environmentVarsReadPrefix);
+        print("log", "ENV-VARS-WRITE-PREFIX - (PRE)=", environmentVarsWritePrefixRaw);
+        print("log", "ENV-VARS-WRITE-PREFIX - (POST)=", environmentVarsWritePrefix);
+        print("log", "ENV-VARS= (PRE)", environmentVarsRaw);
+        print("log", "ENV-VARS= (POST)", environmentVars);
+        print("log", "ENV-VARS-OUTPUT=", environmentVarsOutputs);
     }
     Object.keys(environmentVars).forEach((key) => {
         core.setOutput(environmentVarsWritePrefix + key, environmentVars[key]);
@@ -49461,7 +49461,7 @@ async function executeSshCommands() {
     const baseDomain = getInput("base-domain", "string", environmentVars["BASE_DOMAIN"] ?? process.env.BASE_DOMAIN ?? "");
     const environment = getInput("environment", "string", environmentVars["ENVIRONMENT"] ?? process.env.ENVIRONMENT ?? "");
     const containerPort = getInput("container-port", "string", environmentVars["CONTAINER_PORT"] ?? process.env.CONTAINER_PORT ?? port);
-    console.log("SSH Variables:", "Host=" + sshHost, "Port=" + sshPort, "Username=" + sshUsername, "Password=" + (sshPassword ?? "*")[0] + "*******");
+    print("log", "SSH Variables:", "Host=" + sshHost, "Port=" + sshPort, "Username=" + sshUsername, "Password=" + (sshPassword ?? "*")[0] + "*******");
     let appPublicPortRaw = getInput("app-public-port", "any", environmentVars["APP_PUBLIC_PORT"] ?? process.env.APP_PUBLIC_PORT ?? containerPort ?? port);
     // RESOLVE PORTS
     let appPublicPort;
@@ -49680,7 +49680,7 @@ async function executeSshCommands() {
     sshPostCommands.forEach((c) => sshCommands.push(`${c}[::]?`));
     sshCommands.push("exit");
     const conn = new ssh2_1.Client();
-    console.log("SSH Commands:", sshCommands);
+    print("log", "SSH Commands:", sshCommands);
     const sshCommandsQueue = new MicroQueue(sshCommands ?? []);
     const connPayload = {
         host: sshHost,
@@ -49810,15 +49810,15 @@ function getInput(name, type = "string", defaultValue) {
     return value;
 }
 function print(action = "log", ...content) {
+    if (action === "log!") {
+        process.stdout.write(content.join(" "));
+        return;
+    }
     if (verbose === undefined) {
         verbose = !!getInput("verbose");
     }
     if (!verbose)
         return;
-    if (action === "log!") {
-        process.stdout.write(content.join(" "));
-        return;
-    }
     console[action](...content);
 }
 function getRandomElement(list) {
