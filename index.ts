@@ -443,11 +443,11 @@ async function executeSshCommands() {
             sshCommands.push(`echo Preparing apache2 configuration...`);
             sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
             sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\nEOF`);
+            sshCommands.push(`sudo a2enmod proxy proxy_http headers`);
+            sshCommands.push(`sudo a2ensite ${apacheConfFileName}`);
             if (apache2SetupSsl) {
                 sshCommands.push(`sudo certbot --apache ${apache2DomainNames.map((d) => (`-d ${d}`)).join(" ")} --non-interactive --agree-tos --keep-until-expiring -m ${apache2AppConfServerAdmin} --expand`);
             }
-            sshCommands.push(`sudo a2enmod proxy proxy_http headers`);
-            sshCommands.push(`sudo a2ensite ${apacheConfFileName}`);
             sshCommands.push(`sudo systemctl reload apache2`);
         }
     }
