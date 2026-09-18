@@ -440,6 +440,7 @@ async function executeSshCommands() {
                     if [ "$__DEPLOTN_APP_DEPLOYED__" -eq "1" ]; then
                         echo "Health check failed...";
                         sudo docker logs ${dockerDeploymentAppName};
+                        sudo docker rm -f ${dockerDeploymentAppName} 
                     fi
                     exit $__DEPLOTN_APP_DEPLOYED__
                 `);
@@ -447,8 +448,7 @@ async function executeSshCommands() {
             sshCommands.push(`echo App started successfully, promoting...`);
             const fastRestartScript = `bash -lc '
                 sudo docker rm -f ${dockerAppName} && \
-                ${actualDockerAppStartCommand} && \
-                sudo docker rm -f ${dockerDeploymentAppName} 
+                ${actualDockerAppStartCommand}
             '`;
             sshCommands.push(fastRestartScript);
         } else {
