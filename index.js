@@ -49316,6 +49316,7 @@ async function prepareEnvironmentVars() {
         console.log("log", "ENV-VARS= (PRE)", environmentVarsRaw);
         console.log("log", "ENV-VARS= (POST)", environmentVars);
         const environmentVarsOutputs = Object.keys(environmentVars).reduce((acc, k) => {
+            console.log("log", "KKKK= (POST)", k);
             acc[environmentVarsWritePrefix + k] = environmentVars[k];
             return +acc;
         }, {});
