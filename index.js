@@ -49351,12 +49351,11 @@ async function createEnvFile() {
             envFileContent += value + "\n";
         }
     }
-    print("log", "Environment variables map to read from:\n", JSON.stringify(environmentVars, null, 2), "\n\n");
+    print("log", "Environment variables map to read from:\n", JSON.stringify(environmentVars, null, 2), "");
     print("log!", "Output File:", envFile, "\n");
-    print("log", "Writing the env content:\n", envFileContent, "\n\n");
+    print("log", "Writing the env content:\n", envFileContent);
     print("log!", "Successfully created environment variable file", "\n");
     fs.writeFileSync(envFile, envFileContent);
-    print("log!", "CONTENT-----" + fs.readFileSync(envFile, 'utf8'));
 }
 async function buildAndPushDockerImage(onComplete) {
     if (!getInput("dockerize", "boolean")) {
