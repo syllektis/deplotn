@@ -73,7 +73,7 @@ async function prepareEnvironmentVars() {
         acc[key] = executeInstruction(process.env[environmentVarsReadPrefix + key] ?? "", instruction)?.replaceAll("\r", "");
         return acc;
     }, {});
-    if (verbose !== undefined) {
+    if (verbose) {
         const environmentVarsOutputs = Object.keys(environmentVars).reduce((acc: any, k) => {
             acc[environmentVarsWritePrefix + k] = environmentVars[k];
             return acc;
