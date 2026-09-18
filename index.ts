@@ -74,10 +74,6 @@ async function prepareEnvironmentVars() {
         return acc;
     }, {});
     if (verbose !== undefined) {
-        const environmentVarsOutputs = Object.keys(environmentVars).reduce((acc: any, k) => {
-            acc[environmentVarsWritePrefix + k] = environmentVars[k];
-            return +acc;
-        }, {});
         print("log", "ENV=", environment);
         print("log", "ENV-CASING=", environmentCasing);
         print("log", "ENV-VARS-READ-PREFIX - (PRE)=", environmentVarsReadPrefixRaw);
@@ -86,6 +82,10 @@ async function prepareEnvironmentVars() {
         print("log", "ENV-VARS-WRITE-PREFIX - (POST)=", environmentVarsWritePrefix);
         print("log", "ENV-VARS= (PRE)", environmentVarsRaw);
         print("log", "ENV-VARS= (POST)", environmentVars);
+        const environmentVarsOutputs = Object.keys(environmentVars).reduce((acc: any, k) => {
+            acc[environmentVarsWritePrefix + k] = environmentVars[k];
+            return +acc;
+        }, {});
         print("log", "ENV-VARS-OUTPUT=", environmentVarsOutputs);
     }
     Object.keys(environmentVars).forEach((key) => {
