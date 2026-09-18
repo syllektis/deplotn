@@ -49291,8 +49291,8 @@ async function prepareEnvironmentVars() {
     const environmentOutput = getInput("environment-output", "boolean");
     const environmentVarsRaw = getInput("environment-vars", "array");
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
-    const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix", "string", "") ?? "";
-    const environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix", "string", "") ?? "";
+    const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix") ?? "";
+    const environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix") ?? "";
     const environmentVarsReadPrefix = executeInstruction(expandVariables(environmentVarsReadPrefixRaw), environmentCasing);
     const environmentVarsWritePrefix = executeInstruction(expandVariables(environmentVarsWritePrefixRaw), environmentCasing);
     const environmentVars = environmentVarsRaw?.reduce((acc, key) => {
@@ -49844,7 +49844,7 @@ function getInput(name, type = "string", defaultValue) {
     else if (type === "array" && (typeof value == "string")) {
         return value.split(__TEST_OBJECT ? "\\n" : '\n');
     }
-    return value;
+    return `${value}`;
 }
 function print(action = "log", ...content) {
     if (action === "log!") {
