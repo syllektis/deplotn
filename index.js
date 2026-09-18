@@ -49281,6 +49281,7 @@ async function main(argc, argv) {
         });
     }
     await prepareEnvironmentVars();
+    await createEnvFile();
     await buildAndPushDockerImage(async () => {
         await executeSshCommands();
     });
@@ -49310,7 +49311,7 @@ async function prepareEnvironmentVars() {
     if (verbose !== undefined) {
         const environmentVarsOutputs = Object.keys(environmentVars).reduce((acc, k) => {
             acc[environmentVarsWritePrefix + k] = environmentVars[k];
-            return acc;
+            return +acc;
         }, {});
         print("log", "ENV=", environment);
         print("log", "ENV-CASING=", environmentCasing);
@@ -49327,6 +49328,33 @@ async function prepareEnvironmentVars() {
         __ENVIRONMENT_VARS[environmentVarsWritePrefix + key] = environmentVars[key];
     });
     core.setOutput("env-setup-completed", true);
+}
+async function createEnvFile() {
+    if (!getInput("env-creation", "boolean", false)) {
+        return;
+    }
+    const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
+    const environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix") ?? "";
+    const environmentVarsWritePrefix = executeInstruction(expandVariables(environmentVarsWritePrefixRaw), environmentCasing);
+    const environmentVars = Object.entries(__ENVIRONMENT_VARS).reduce((acc, [key, value]) => {
+        acc[key.replace(environmentVarsWritePrefix, "")] = value;
+        return acc;
+    }, {});
+    const envVariablesKeys = getInput("env-variable-keys", "array", []);
+    const envFile = getInput("env-file-path", "string", environmentVars["ENV_FILE_PATH"] ?? process.env.ENV_FILE_PATH ?? ".env");
+    const envRawFileContent = getInput("env-file-content", "string", environmentVars["ENV_FILE_CONTENT"] ?? process.env.ENV_FILE_CONTENT ?? "");
+    print("log!", "Creating environment variable file", envFile, "\n");
+    let envFileContent = envRawFileContent;
+    for (const envVariablesKey of envVariablesKeys) {
+        const value = environmentVars[envVariablesKey] ?? process.env[envVariablesKey];
+        if (value) {
+            envFileContent += value + "\n";
+        }
+    }
+    print("log", "Environment variables map to read from:\n", JSON.stringify(environmentVars, null, 2), "\n\n");
+    print("log", "Writing the env content:\n", envFileContent, "\n\n");
+    print("log!", "Successfully created environment variable file", "\n");
+    fs.writeFileSync(envFile, envFileContent);
 }
 async function buildAndPushDockerImage(onComplete) {
     if (!getInput("dockerize", "boolean")) {
@@ -49394,6 +49422,9 @@ async function buildAndPushDockerImage(onComplete) {
     dockerShellProcess.stdin.end();
 }
 async function executeSshCommands() {
+    if (!getInput("ssh-execution", "boolean", true)) {
+        return;
+    }
     const sshRuntimeMinutes = getInput("ssh-runtime-minutes", "number", 10);
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
     const environmentVarsRaw = getInput("ssh-expose-vars", "array", []);
@@ -49452,7 +49483,9 @@ async function executeSshCommands() {
     const sshCommands = environmentVarsSshCommands.concat(getInput("ssh-commands", "array", []).map((c) => `${c}[::]?`));
     const sshUsername = getInput("ssh-username", "string", environmentVars["SSH_USERNAME"] ?? process.env.SSH_USERNAME ?? sshConnectionUsername ?? "");
     const sshPassword = getInput("ssh-password", "string", environmentVars["SSH_PASSWORD"] ?? process.env.SSH_PASSWORD ?? sshConnectionPassword ?? "");
-    if (!sshHost || !sshCommands.length) {
+    if (!sshHost) {
+        print("error", `ssh host not configured`);
+        core.setFailed(`The ssh host is not configured`);
         return;
     }
     const port = getInput("port", "string", environmentVars["PORT"] ?? process.env.PORT ?? "");
@@ -49627,7 +49660,7 @@ async function executeSshCommands() {
         const apache2Domains = getInput("apache2-domains", "array", []);
         const apache2ConfigureDomain = getInput("apache2-configure-domain", "boolean", true);
         const apache2AddEnvToDomain = getInput("apache2-add-env-to-domain", "boolean", true);
-        const apache2ConfigureDomainWww = getInput("apache2-configure-domain-www", "boolean", true);
+        const apache2ConfigureDomainWww = getInput("apache2-configure-domain-www", "boolean", false);
         const apache2ConfigPath = getInput("apache2-config-path", "string", environmentVars["APACHE2_CONFIG_PATH"] ?? process.env.APACHE2_CONFIG_PATH ?? "");
         const apache2BaseDomain = getInput("apache2-base-domain", "string", environmentVars["APACHE2_BASE_DOMAIN"] ?? process.env.APACHE2_BASE_DOMAIN ?? baseDomain);
         const apache2Environment = getInput("apache2-environment", "string", environmentVars["APACHE2_ENVIRONMENT"] ?? process.env.APACHE2_ENVIRONMENT ?? environment);

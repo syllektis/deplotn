@@ -20,8 +20,21 @@ inputs:
   environment: 
     description: "Deployment environment"
     required: true
+  env-creation: 
+    description: "Flag to indicate whether to create the environment variables file"
+    required: true
   environment-output: 
     description: "Flag to indicate to resolve and output repo variables"
+    required: true
+  env-file-path: 
+    description: "Path relative to the project directory to write the environment variables. Default .env"
+    required: false
+    default: .env
+  env-file-content: 
+    description: "The file content to write to the environment variable file"
+    required: false
+  env-variable-keys: 
+    description: "The list of variables to add to the environment file to be created"
     required: true
   environment-vars:
     description: "The list of variables to process and output for subsequent actions"
@@ -117,6 +130,10 @@ inputs:
     required: false
 
   # ssh setup
+  ssh-execution: 
+    description: "Flag to indicate if to run commands in ssh host"
+    required: false
+    default: true
   ssh-connection: 
     description: "One-line connection string for ssh. e.g. username:password@host:port"
     required: false
