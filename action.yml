@@ -33,6 +33,9 @@ inputs:
   env-file-content: 
     description: "The file content to write to the environment variable file"
     required: false
+  env-file-vars:
+    description: "The list of variables to write to the env file path. Default to 'environment-vars' if not set"
+    required: false
   environment-vars:
     description: "The list of variables to process and output for subsequent actions"
     required: false

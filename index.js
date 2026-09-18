@@ -49291,8 +49291,16 @@ async function prepareEnvironmentVars() {
     const environmentOutput = getInput("environment-output", "boolean");
     const environmentVarsRaw = getInput("environment-vars", "array");
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
-    const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix", "string", "") ?? "";
-    const environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix", "string", "") ?? "";
+    let environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix", "string", "") ?? "";
+    let environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix", "string", "") ?? "";
+    if (environmentVarsReadPrefixRaw?.includes("|")) {
+        const [literal, instruction] = environmentVarsReadPrefixRaw.split("|");
+        environmentVarsReadPrefixRaw = executeInstruction(literal, instruction);
+    }
+    if (environmentVarsWritePrefixRaw?.includes("|")) {
+        const [literal, instruction] = environmentVarsWritePrefixRaw.split("|");
+        environmentVarsWritePrefixRaw = executeInstruction(literal, instruction);
+    }
     const environmentVarsReadPrefix = executeInstruction(expandVariables(environmentVarsReadPrefixRaw), environmentCasing);
     const environmentVarsWritePrefix = executeInstruction(expandVariables(environmentVarsWritePrefixRaw), environmentCasing);
     const environmentVars = environmentVarsRaw?.reduce((acc, key) => {
@@ -49335,17 +49343,22 @@ async function createEnvFile() {
     }
     print("log!", "Creating environment variable file", "\n");
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
-    const environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix") ?? "";
+    let environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix") ?? "";
+    if (environmentVarsWritePrefixRaw?.includes("|")) {
+        const [literal, instruction] = environmentVarsWritePrefixRaw.split("|");
+        environmentVarsWritePrefixRaw = executeInstruction(literal, instruction);
+    }
     const environmentVarsWritePrefix = executeInstruction(expandVariables(environmentVarsWritePrefixRaw), environmentCasing);
     const environmentVars = Object.entries(__ENVIRONMENT_VARS).reduce((acc, [key, value]) => {
         acc[key.replace(environmentVarsWritePrefix, "")] = value;
         return acc;
     }, {});
+    const envFilesKeys = getInput("env-file-vars", "array");
     const envVariablesKeys = getInput("environment-vars", "array");
     const envFile = getInput("env-file-path", "string", environmentVars["ENV_FILE_PATH"] ?? process.env.ENV_FILE_PATH ?? ".env");
     const envRawFileContent = getInput("env-file-content", "string", environmentVars["ENV_FILE_CONTENT"] ?? process.env.ENV_FILE_CONTENT ?? "");
     let envFileContent = envRawFileContent;
-    for (const envVariablesKey of envVariablesKeys) {
+    for (const envVariablesKey of (envFilesKeys?.length > 0 ? envFilesKeys : envVariablesKeys)) {
         const value = environmentVars[envVariablesKey] ?? process.env[envVariablesKey];
         if (value) {
             envFileContent += value + "\n";
@@ -49371,7 +49384,11 @@ async function buildAndPushDockerImage(onComplete) {
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
     const environmentVarsRaw = getInput("docker-write-env-vars", "array");
     const envIsNamespace = getInput("environment-is-image-namespace", "boolean", false);
-    const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix") ?? "";
+    let environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix") ?? "";
+    if (environmentVarsReadPrefixRaw?.includes("|")) {
+        const [literal, instruction] = environmentVarsReadPrefixRaw.split("|");
+        environmentVarsReadPrefixRaw = executeInstruction(literal, instruction);
+    }
     const dockerRegistryHost = getInput("docker-registry-host", "string", process.env.REGISTRY_HOST ?? "");
     const dockerRegistryUsername = getInput("docker-registry-username", "string", process.env.REGISTRY_USERNAME ?? "");
     const dockerRegistryPassword = getInput("docker-registry-password", "string", process.env.REGISTRY_PASSWORD ?? "");
@@ -49429,7 +49446,11 @@ async function executeSshCommands() {
     const sshRuntimeMinutes = getInput("ssh-runtime-minutes", "number", 10);
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
     const environmentVarsRaw = getInput("ssh-expose-vars", "array", []);
-    const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix") ?? "";
+    let environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix") ?? "";
+    if (environmentVarsReadPrefixRaw?.includes("|")) {
+        const [literal, instruction] = environmentVarsReadPrefixRaw.split("|");
+        environmentVarsReadPrefixRaw = executeInstruction(literal, instruction);
+    }
     const dockerEnvironmentVarsRaw = getInput("docker-app-env-vars", "array", []);
     const environmentVarsReadPrefix = executeInstruction(expandVariables(environmentVarsReadPrefixRaw), environmentCasing);
     const environmentVars = ["SSH_HOST", "SSH_PORT", "SSH_USERNAME", "SSH_PASSWORD", "SSH_PRIVATEKEY", "SSH_CONNECTION"].concat(...environmentVarsRaw).concat(...dockerEnvironmentVarsRaw).reduce((acc, key) => {
