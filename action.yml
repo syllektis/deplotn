@@ -103,6 +103,9 @@ inputs:
   docker-app-name:
     description: "Name of the container/service when run with docker. Defaults to app-name"
     required: false
+  docker-app-run-args:
+    description: "Flat argument to add the to command to start the app in docker"
+    required: false
   docker-image-location:
     description: "Value of the docker service/container image. e.g. ghcr.io/test/app:environment"
     required: false

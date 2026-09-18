@@ -49566,11 +49566,12 @@ async function executeSshCommands() {
         const dockerAppHealthCheck = getInput("docker-app-health-check", "boolean", true);
         const dockerRegistries = getInput("docker-registries", "array", []);
         const dockerAppHealthUrls = getInput("docker-app-health-urls", "array", []);
+        const dockerAppRunArgs = getInput("docker-app-run-args", "string", environmentVars["DOCKER_APP_RUN_ARGS"] ?? process.env.DOCKER_APP_RUN_ARGS ?? "");
         const dockerAppPrintLog = getInput("docker-app-print-log", "number", environmentVars["DOCKER_APP_PRINT_LOG"] ?? process.env.DOCKER_APP_PRINT_LOG ?? 100);
-        const dockerAppProcessWaitTime = getInput("docker-app-process-wait-time", "number", environmentVars["DOCKER_APP_PROCESS_WAIT_TIME"] ?? process.env.DOCKER_APP_PROCESS_WAIT_TIME ?? 10);
         const dockerImageLocation = getInput("docker-image-location", "string", environmentVars["DOCKER_IMAGE_LOCATION"] ?? process.env.DOCKER_IMAGE_LOCATION ?? "");
         const dockerAppHealthWaitTime = getInput("docker-app-health-wait-time", "number", environmentVars["DOCKER_APP_HEALTH_WAIT_TIME"] ?? process.env.DOCKER_APP_HEALTH_WAIT_TIME ?? 5);
         const dockerAppHealthMaxCheck = getInput("docker-app-health-max-check", "number", environmentVars["DOCKER_APP_HEALTH_MAX_CHECK"] ?? process.env.DOCKER_APP_HEALTH_MAX_CHECK ?? 12);
+        const dockerAppProcessWaitTime = getInput("docker-app-process-wait-time", "number", environmentVars["DOCKER_APP_PROCESS_WAIT_TIME"] ?? process.env.DOCKER_APP_PROCESS_WAIT_TIME ?? 10);
         for (const dockerRegistry of dockerRegistries) {
             const parts = dockerRegistry.split("|");
             const registry = parts[0];
@@ -49604,12 +49605,12 @@ async function executeSshCommands() {
             }
         }
         const performDockerAppHealthCheck = dockerAppHealthCheck || !!dockerAppHealthUrls.length;
-        const actualDockerAppStartCommand = `sudo docker run -d ${dockerAppEnvVar} --name ${dockerAppName} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`;
+        const actualDockerAppStartCommand = `sudo docker run -d ${dockerAppEnvVar} --name ${dockerAppName} ${dockerAppRunArgs} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`;
         if (performDockerAppHealthCheck) {
             const dockerDeploymentPort = getRandomElement(generateWithinRange(60000, 65530, getRandomInt(1, 4)));
             const dockerDeploymentAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
             sshCommands.push(`sudo docker rm -f ${dockerDeploymentAppName}[::]?`);
-            sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
+            sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} ${dockerAppRunArgs} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
             const localDockerAppUrl = `http://127.0.0.1:${dockerDeploymentPort}`;
             if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
                 dockerAppHealthUrls.push(localDockerAppUrl);
