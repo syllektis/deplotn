@@ -49307,14 +49307,14 @@ async function prepareEnvironmentVars() {
         return acc;
     }, {});
     if (verbose !== undefined) {
-        print("log!", "ENV=", environment);
-        print("log!", "ENV-CASING=", environmentCasing);
-        print("log!", "ENV-VARS-READ-PREFIX - (PRE)=", environmentVarsReadPrefixRaw);
-        print("log!", "ENV-VARS-READ-PREFIX - (POST)=", environmentVarsReadPrefix);
-        print("log!", "ENV-VARS-WRITE-PREFIX - (PRE)=", environmentVarsWritePrefixRaw);
-        print("log!", "ENV-VARS-WRITE-PREFIX - (POST)=", environmentVarsWritePrefix);
-        print("log!", "ENV-VARS= (PRE)", environmentVarsRaw);
-        print("log!", "ENV-VARS= (POST)", environmentVars);
+        console.log("log", "ENV=", environment);
+        console.log("log", "ENV-CASING=", environmentCasing);
+        console.log("log", "ENV-VARS-READ-PREFIX - (PRE)=", environmentVarsReadPrefixRaw);
+        console.log("log", "ENV-VARS-READ-PREFIX - (POST)=", environmentVarsReadPrefix);
+        console.log("log", "ENV-VARS-WRITE-PREFIX - (PRE)=", environmentVarsWritePrefixRaw);
+        console.log("log", "ENV-VARS-WRITE-PREFIX - (POST)=", environmentVarsWritePrefix);
+        console.log("log", "ENV-VARS= (PRE)", environmentVarsRaw);
+        console.log("log", "ENV-VARS= (POST)", environmentVars);
         const environmentVarsOutputs = Object.keys(environmentVars).reduce((acc, k) => {
             acc[environmentVarsWritePrefix + k] = environmentVars[k];
             return +acc;
