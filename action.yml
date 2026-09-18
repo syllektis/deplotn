@@ -25,7 +25,7 @@ inputs:
     required: true
   environment-output: 
     description: "Flag to indicate to resolve and output repo variables"
-    required: true
+    required: false
   env-file-path: 
     description: "Path relative to the project directory to write the environment variables. Default .env"
     required: false

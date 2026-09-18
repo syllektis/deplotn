@@ -49287,8 +49287,8 @@ async function main(argc, argv) {
     });
 }
 async function prepareEnvironmentVars() {
-    const environmentOutput = getInput("environment-output", "boolean");
     const environment = getInput("environment", "string", "main");
+    const environmentOutput = getInput("environment-output", "boolean");
     const environmentVarsRaw = getInput("environment-vars", "array");
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
     const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix", "string", "") ?? "";
