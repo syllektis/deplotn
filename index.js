@@ -49738,10 +49738,10 @@ async function executeSshCommands() {
 
     ServerAdmin ${apache2AppConfServerAdmin}
 
-    ${apache2ConfEntries.map((entry) => entry).join(`\n    `)}
-
     ProxyPreserveHost On
     ProxyRequests Off
+
+    ${apache2ConfEntries.map((entry) => entry).join(`\n    `)}
 
     ProxyPass / http://127.0.0.1:${appPublicPort}/
     ProxyPassReverse / http://127.0.0.1:${appPublicPort}/
