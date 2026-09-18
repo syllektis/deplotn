@@ -219,6 +219,9 @@ inputs:
   apache2-conf-server-admin: 
     description: "The server admin value for apache2 configuration e.g webmaster@yourdomain.com"
     required: false
+  apache2-conf-raw-entries: 
+    description: "List of raw entries to add to the generated apache2 configuration file"
+    required: false
   
   # dokku setup
   dokku-deploy: 

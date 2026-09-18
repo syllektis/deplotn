@@ -465,14 +465,16 @@ async function executeSshCommands() {
     // APACHE2
     let apache2AppName = appName;
     if (apache2Configure) {
-        let apache2ServerConfigPath = "/etc/apache2/sites-available/";
         const apache2DomainNames: string[] = [];
+        const apache2ConfEntries: string[] = [];
+        let apache2ServerConfigPath = "/etc/apache2/sites-available/";
         apache2AppName = getInput("apache2-app-name", "string", apache2AppName);
         const apache2SetupSsl = getInput("apache2-setup-ssl", "boolean", false);
         const apache2Domains = (getInput("apache2-domains", "array", []) as string[]);
         const apache2ConfigureDomain = getInput("apache2-configure-domain", "boolean", true);
         const apache2AddEnvToDomain = getInput("apache2-add-env-to-domain", "boolean", true);
         const apache2ConfigureDomainWww = getInput("apache2-configure-domain-www", "boolean", false);
+        const apache2ConfRawEntries = (getInput("apache2-conf-raw-entries", "array", []) as string[]);
         const apache2ConfigPath = getInput("apache2-config-path", "string", environmentVars["APACHE2_CONFIG_PATH"] ?? process.env.APACHE2_CONFIG_PATH ?? "");
         const apache2BaseDomain = getInput("apache2-base-domain", "string", environmentVars["APACHE2_BASE_DOMAIN"] ?? process.env.APACHE2_BASE_DOMAIN ?? baseDomain);
         const apache2Environment = getInput("apache2-environment", "string", environmentVars["APACHE2_ENVIRONMENT"] ?? process.env.APACHE2_ENVIRONMENT ?? environment);
@@ -494,6 +496,13 @@ async function executeSshCommands() {
             }
             apache2DomainNames.push(`${domain}`);
         }
+        for (const apache2ConfRawEntry of apache2ConfRawEntries) {
+            const parts = apache2ConfRawEntry.split("|");
+            if (parts.length > 1) {
+                if (environment !== parts[1]) continue;
+            }
+            apache2ConfEntries.push(parts[0]);
+        }
         let configContent = '';
         if (apache2ConfigPath) {
             configContent = fs.readFileSync(apache2ConfigPath, 'utf8');
@@ -504,6 +513,8 @@ async function executeSshCommands() {
     ${otherDomains?.length > 0 ? "ServerAlias " : ""}${otherDomains.map((d) => (`${d}`)).join(" ")}
 
     ServerAdmin ${apache2AppConfServerAdmin}
+
+    ${apache2ConfEntries.map((entry) => entry).join(`\n    `)}
 
     ProxyPreserveHost On
     ProxyRequests Off
