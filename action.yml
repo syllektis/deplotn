@@ -33,14 +33,11 @@ inputs:
   env-file-content: 
     description: "The file content to write to the environment variable file"
     required: false
-  env-variable-keys: 
-    description: "The list of variables to add to the environment file to be created"
-    required: true
   environment-vars:
     description: "The list of variables to process and output for subsequent actions"
-    required: true
+    required: false
     default: |
-        DOKKU_CONFIGS
+        CONFIGS
   environment-vars-read-prefix:
     description: "The prefix for the environment variable when reading from inputs if available, e.g. UAT_, ${environment}_"
     required: false
@@ -78,7 +75,7 @@ inputs:
     description: "The variables to put in the .env file in the Dockerfile project root"
     required: false
     default: |
-        DOKKU_CONFIGS
+        CONFIGS
   docker-image-tag: 
     description: "Docker image tag"
     required: false

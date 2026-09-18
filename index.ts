@@ -110,7 +110,7 @@ async function createEnvFile() {
         acc[key.replace(environmentVarsWritePrefix, "")] = value;
         return acc;
     }, {} as { [k: string]: string; });
-    const envVariablesKeys = getInput("env-variable-keys", "array", []) as string[];
+    const envVariablesKeys = getInput("environment-vars", "array") as string[];
     const envFile = getInput("env-file-path", "string", environmentVars["ENV_FILE_PATH"] ?? process.env.ENV_FILE_PATH ?? ".env");
     const envRawFileContent = getInput("env-file-content", "string", environmentVars["ENV_FILE_CONTENT"] ?? process.env.ENV_FILE_CONTENT ?? "");
 
@@ -127,6 +127,7 @@ async function createEnvFile() {
     print("log", "Writing the env content:\n", envFileContent, "\n\n");
     print("log!", "Successfully created environment variable file", "\n");
     fs.writeFileSync(envFile, envFileContent);
+    print("log!", "CONTENT-----" + fs.readFileSync(envFile, 'utf8'));
 }
 
 async function buildAndPushDockerImage(onComplete: () => void) {
