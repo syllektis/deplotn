@@ -579,12 +579,18 @@ function execCommand(conn: Client, command: string, flag?: string): Promise<numb
     });
 }
 
-function executeInstruction(value: string, instruction: string) {
+function executeInstruction(value: string, fullInstruction: string) {
+    const [ instruction, ...iargs] = fullInstruction.split(",");
     if (instruction === "UPPER") return value.toUpperCase();
     else if (instruction === "LOWER") return value.toLowerCase();
     else if (instruction === "base64") return Buffer.from(value, "utf8").toString("base64");
-    else if (instruction === "sanitize") return Buffer.from(value.replaceAll("\r", "").replaceAll("\n", "~"), "utf8").toString("base64").replaceAll("\n", "~");
     else if (instruction === "desanitize") return Buffer.from(value.replaceAll("~", "\n"), "base64").toString("utf8").replaceAll("~", "\n");
+    else if (instruction === "sanitize") return Buffer.from(value.replaceAll("\r", "").replaceAll("\n", "~"), "utf8").toString("base64").replaceAll("\n", "~");
+    else if (instruction === "replace") {
+        const word = iargs[0];
+        const replacement = iargs[1];
+        return value.replaceAll(word, replacement);
+    }
     return value;
 }
 
