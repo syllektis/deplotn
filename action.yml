@@ -137,6 +137,10 @@ inputs:
     description: "Flag to indicate if to run commands in ssh host"
     required: false
     default: true
+  ssh-sudo: 
+    description: "Flag to indicate if to run all ssh commands with sudo"
+    required: false
+    default: true
   ssh-connection: 
     description: "One-line connection string for ssh. e.g. username:password@host:port"
     required: false

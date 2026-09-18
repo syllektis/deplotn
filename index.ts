@@ -6,6 +6,7 @@ import { spawn } from "child_process";
 import * as github from "@actions/github";
 import { Client, ConnectConfig, ClientChannel } from 'ssh2';
 
+let sudo: string = "";
 let verbose: boolean = false;
 let __TEST_OBJECT: any = null;
 let __ENVIRONMENT_VARS: { [key: string]: string; } = {};
@@ -40,6 +41,7 @@ async function main(argc: number, argv: string[]) {
         setupTest(argc, argv);
     }
     verbose = getInput("verbose", "boolean", false);
+    sudo = getInput("ssh-sudo", "boolean", false) ? "sudo " : "";
     if (process.env.REPO_VARS) {
         let parsed = JSON.parse(process.env.REPO_VARS);
         Object.keys(parsed).forEach((k) => {
@@ -384,7 +386,7 @@ async function executeSshCommands() {
             const domain = registryParts[registryParts.length - 1];
             const access = registryParts.slice(0, registryParts.length - 1);
             const [username, ...password] = access.join("@").split(":");
-            sshCommands.push(`sudo echo "${password.join("")}" | docker login ${domain} -u ${username} --password-stdin`);
+            sshCommands.push(`${sudo}echo "${password.join("")}" | docker login ${domain} -u ${username} --password-stdin`);
         }
         for (const dockerAppRunArgEntry of dockerAppRunArgs) {
             const parts = dockerAppRunArgEntry.split("|");
@@ -395,10 +397,10 @@ async function executeSshCommands() {
         }
 
         if (dockerImageNoCache) {
-            sshCommands.push(`sudo docker rmi ${dockerImageLocation}[::]?`);
+            sshCommands.push(`${sudo}docker rmi ${dockerImageLocation}[::]?`);
         }
         if (dockerImageLocation) {
-            sshCommands.push(`sudo docker pull ${dockerImageLocation}`);
+            sshCommands.push(`${sudo}docker pull ${dockerImageLocation}`);
         }
         let dockerAppEnvVar = "";
         for (const dockerEnvironmentVar of dockerEnvironmentVarsRaw) {
@@ -413,12 +415,12 @@ async function executeSshCommands() {
             }
         }
         const performDockerAppHealthCheck = dockerAppHealthCheck || !!dockerAppHealthUrls.length;
-        const actualDockerAppStartCommand = `sudo docker run -d ${dockerAppEnvVar} --name ${dockerAppName} ${dockerAppRunArg} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`;
+        const actualDockerAppStartCommand = `${sudo}docker run -d ${dockerAppEnvVar} --name ${dockerAppName} ${dockerAppRunArg} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`;
         if (performDockerAppHealthCheck) {
             const dockerDeploymentPort = getRandomElement(generateWithinRange(60000, 65530, getRandomInt(1, 4)));
             const dockerDeploymentAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
-            sshCommands.push(`sudo docker rm -f ${dockerDeploymentAppName}[::]?`);
-            sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} ${dockerAppRunArg} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
+            sshCommands.push(`${sudo}docker rm -f ${dockerDeploymentAppName}[::]?`);
+            sshCommands.push(`${sudo}docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} ${dockerAppRunArg} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
 
             const localDockerAppUrl = `http://127.0.0.1:${dockerDeploymentPort}`;
             if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
@@ -450,13 +452,13 @@ async function executeSshCommands() {
             '`;
             sshCommands.push(fastRestartScript);
         } else {
-            sshCommands.push(`sudo docker rm -f ${dockerAppName}[::]?`);
+            sshCommands.push(`${sudo}docker rm -f ${dockerAppName}[::]?`);
             sshCommands.push(actualDockerAppStartCommand);
         }
         sshCommands.push(`echo "Waiting for actual app to be up..."`);
         sshCommands.push(`sleep ${dockerAppProcessWaitTime}`);
         if (dockerAppPrintLog && dockerAppPrintLog != "0") {
-            sshCommands.push(`sudo docker logs -n ${dockerAppPrintLog} ${dockerAppName}`);
+            sshCommands.push(`${sudo}docker logs -n ${dockerAppPrintLog} ${dockerAppName}`);
         }
     }
 
@@ -512,14 +514,14 @@ async function executeSshCommands() {
         }
         if (configContent) {
             sshCommands.push(`echo Preparing apache2 configuration...`);
-            sshCommands.push(`sudo touch ${apache2ServerConfigPath}`);
-            sshCommands.push(`sudo cat << EOF > ${apache2ServerConfigPath}\n${configContent}\nEOF`);
-            sshCommands.push(`sudo a2enmod proxy proxy_http headers`);
-            sshCommands.push(`sudo a2ensite ${apacheConfFileName}`);
+            sshCommands.push(`${sudo}touch ${apache2ServerConfigPath}`);
+            sshCommands.push(`${sudo}cat << EOF > ${apache2ServerConfigPath}\n${configContent}\nEOF`);
+            sshCommands.push(`${sudo}a2enmod proxy proxy_http headers`);
+            sshCommands.push(`${sudo}a2ensite ${apacheConfFileName}`);
             if (apache2SetupSsl) {
-                sshCommands.push(`sudo certbot --apache ${apache2DomainNames.map((d) => (`-d ${d}`)).join(" ")} --non-interactive --agree-tos --keep-until-expiring -m ${apache2AppConfServerAdmin} --expand`);
+                sshCommands.push(`${sudo}certbot --apache ${apache2DomainNames.map((d) => (`-d ${d}`)).join(" ")} --non-interactive --agree-tos --keep-until-expiring -m ${apache2AppConfServerAdmin} --expand`);
             }
-            sshCommands.push(`sudo systemctl reload apache2`);
+            sshCommands.push(`${sudo}systemctl reload apache2`);
         }
     }
 
