@@ -49288,8 +49288,6 @@ async function main(argc, argv) {
 }
 async function prepareEnvironmentVars() {
     const environmentOutput = getInput("environment-output", "boolean");
-    if (!environmentOutput)
-        return;
     const environment = getInput("environment", "string", "main");
     const environmentVarsRaw = getInput("environment-vars", "array");
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
@@ -49324,15 +49322,18 @@ async function prepareEnvironmentVars() {
         print("log", "ENV-VARS-OUTPUT=", environmentVarsOutputs);
     }
     Object.keys(environmentVars).forEach((key) => {
-        core.setOutput(environmentVarsWritePrefix + key, environmentVars[key]);
+        if (environmentOutput)
+            core.setOutput(environmentVarsWritePrefix + key, environmentVars[key]);
         __ENVIRONMENT_VARS[environmentVarsWritePrefix + key] = environmentVars[key];
     });
     core.setOutput("env-setup-completed", true);
 }
 async function createEnvFile() {
-    if (!getInput("env-creation", "boolean", false)) {
+    const envCreation = getInput("env-creation", "boolean", false);
+    if (!envCreation) {
         return;
     }
+    print("log!", "Creating environment variable file", "\n");
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
     const environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix") ?? "";
     const environmentVarsWritePrefix = executeInstruction(expandVariables(environmentVarsWritePrefixRaw), environmentCasing);
@@ -49343,7 +49344,6 @@ async function createEnvFile() {
     const envVariablesKeys = getInput("env-variable-keys", "array", []);
     const envFile = getInput("env-file-path", "string", environmentVars["ENV_FILE_PATH"] ?? process.env.ENV_FILE_PATH ?? ".env");
     const envRawFileContent = getInput("env-file-content", "string", environmentVars["ENV_FILE_CONTENT"] ?? process.env.ENV_FILE_CONTENT ?? "");
-    print("log!", "Creating environment variable file", envFile, "\n");
     let envFileContent = envRawFileContent;
     for (const envVariablesKey of envVariablesKeys) {
         const value = environmentVars[envVariablesKey] ?? process.env[envVariablesKey];
@@ -49352,6 +49352,7 @@ async function createEnvFile() {
         }
     }
     print("log", "Environment variables map to read from:\n", JSON.stringify(environmentVars, null, 2), "\n\n");
+    print("log!", "Output File:", envFile, "\n");
     print("log", "Writing the env content:\n", envFileContent, "\n\n");
     print("log!", "Successfully created environment variable file", "\n");
     fs.writeFileSync(envFile, envFileContent);
