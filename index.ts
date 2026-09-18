@@ -614,7 +614,7 @@ function getInput(name: string, type: string = "string", defaultValue?: any) {
     } else if (type === "array" && (typeof value == "string")) {
         return value.split(__TEST_OBJECT ? "\\n" : '\n');
     }
-    return `${value}`;
+    return value;
 }
 
 function print(action: "log" | "log!" | "error" = "log", ...content: any[]) {

@@ -49844,7 +49844,7 @@ function getInput(name, type = "string", defaultValue) {
     else if (type === "array" && (typeof value == "string")) {
         return value.split(__TEST_OBJECT ? "\\n" : '\n');
     }
-    return `${value}`;
+    return value;
 }
 function print(action = "log", ...content) {
     if (action === "log!") {
