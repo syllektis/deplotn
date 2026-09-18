@@ -49291,8 +49291,8 @@ async function prepareEnvironmentVars() {
     const environment = getInput("environment", "string", "main");
     const environmentVarsRaw = getInput("environment-vars", "array");
     const environmentCasing = (getInput("environment-casing") ?? "").toUpperCase();
-    const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix") ?? "";
-    const environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix") ?? "";
+    const environmentVarsReadPrefixRaw = getInput("environment-vars-read-prefix", "string", "") ?? "";
+    const environmentVarsWritePrefixRaw = getInput("environment-vars-write-prefix", "string", "") ?? "";
     const environmentVarsReadPrefix = executeInstruction(expandVariables(environmentVarsReadPrefixRaw), environmentCasing);
     const environmentVarsWritePrefix = executeInstruction(expandVariables(environmentVarsWritePrefixRaw), environmentCasing);
     const environmentVars = environmentVarsRaw?.reduce((acc, key) => {
