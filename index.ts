@@ -338,12 +338,13 @@ async function executeSshCommands() {
     // DOCKER
     let dockerAppName = appName;
     if (dockerDeploy) {
+        let dockerAppRunArg = "";
         dockerAppName = getInput("docker-app-name", "string", dockerAppName);
         const dockerImageNoCache = getInput("docker-image-nocache", "boolean", true);
         const dockerAppHealthCheck = getInput("docker-app-health-check", "boolean", true);
         const dockerRegistries = (getInput("docker-registries", "array", []) as string[]);
+        const dockerAppRunArgs = (getInput("docker-app-run-args", "array", []) as string[]);
         const dockerAppHealthUrls = (getInput("docker-app-health-urls", "array", []) as string[]);
-        const dockerAppRunArgs = getInput("docker-app-run-args", "string", environmentVars["DOCKER_APP_RUN_ARGS"] ?? process.env.DOCKER_APP_RUN_ARGS ?? "");
         const dockerAppPrintLog = getInput("docker-app-print-log", "number", environmentVars["DOCKER_APP_PRINT_LOG"] ?? process.env.DOCKER_APP_PRINT_LOG ?? 100);
         const dockerImageLocation = getInput("docker-image-location", "string", environmentVars["DOCKER_IMAGE_LOCATION"] ?? process.env.DOCKER_IMAGE_LOCATION ?? "");
         const dockerAppHealthWaitTime = getInput("docker-app-health-wait-time", "number", environmentVars["DOCKER_APP_HEALTH_WAIT_TIME"] ?? process.env.DOCKER_APP_HEALTH_WAIT_TIME ?? 5);
@@ -361,6 +362,13 @@ async function executeSshCommands() {
             const access = registryParts.slice(0, registryParts.length - 1);
             const [username, ...password] = access.join("@").split(":");
             sshCommands.push(`sudo echo "${password.join("")}" | docker login ${domain} -u ${username} --password-stdin`);
+        }
+        for (const dockerAppRunArgEntry of dockerAppRunArgs) {
+            const parts = dockerAppRunArgEntry.split("|");
+            if (parts.length > 1) {
+                if (environment !== parts[1]) continue;
+            }
+            dockerAppRunArg += parts[0] + " ";
         }
 
         if (dockerImageNoCache) {
@@ -382,12 +390,12 @@ async function executeSshCommands() {
             }
         }
         const performDockerAppHealthCheck = dockerAppHealthCheck || !!dockerAppHealthUrls.length;
-        const actualDockerAppStartCommand = `sudo docker run -d ${dockerAppEnvVar} --name ${dockerAppName} ${dockerAppRunArgs} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`;
+        const actualDockerAppStartCommand = `sudo docker run -d ${dockerAppEnvVar} --name ${dockerAppName} ${dockerAppRunArg} -p ${appPublicPort}:${containerPort} ${dockerImageLocation}`;
         if (performDockerAppHealthCheck) {
             const dockerDeploymentPort = getRandomElement(generateWithinRange(60000, 65530, getRandomInt(1, 4)));
             const dockerDeploymentAppName = (dockerAppHealthCheck ? `${dockerAppName}_deploying` : dockerAppName);
             sshCommands.push(`sudo docker rm -f ${dockerDeploymentAppName}[::]?`);
-            sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} ${dockerAppRunArgs} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
+            sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} ${dockerAppRunArg} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
 
             const localDockerAppUrl = `http://127.0.0.1:${dockerDeploymentPort}`;
             if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
