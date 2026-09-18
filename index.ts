@@ -389,9 +389,11 @@ async function executeSshCommands() {
             sshCommands.push(`sudo docker run -d ${dockerAppEnvVar} --name ${dockerDeploymentAppName} -p ${dockerDeploymentPort}:${containerPort} ${dockerImageLocation}`);
 
             const localDockerAppUrl = `http://127.0.0.1:${dockerDeploymentPort}`;
+            console.log("THE HEALTH CHECKES BEFORE", dockerAppHealthUrls);
             if (!dockerAppHealthUrls.length && dockerAppHealthCheck) {
                 dockerAppHealthUrls.push(localDockerAppUrl);
             }
+            console.log("THE HEALTH CHECKES", dockerAppHealthUrls);
             sshCommands.push(`echo Checking if app has been successfully deployed...`);
             for (let dockerAppHealthUrl of dockerAppHealthUrls) {
                 if (dockerAppHealthUrl.startsWith("/")) dockerAppHealthUrl = localDockerAppUrl + dockerAppHealthUrl;
