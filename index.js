@@ -49662,8 +49662,8 @@ async function executeSshCommands() {
                     if [ "$__DEPLOTN_APP_DEPLOYED__" -eq "1" ]; then
                         echo "Health check failed...";
                         sudo docker logs ${dockerDeploymentAppName};
-                        sudo docker rm -f ${dockerDeploymentAppName} 
                     fi
+                    sudo docker rm -f ${dockerDeploymentAppName} 
                     exit $__DEPLOTN_APP_DEPLOYED__
                 `);
             }
