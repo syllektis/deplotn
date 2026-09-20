@@ -49618,7 +49618,7 @@ async function executeSshCommands() {
             dockerAppRunArg += parts[0] + " ";
         }
         if (dockerImageNoCache) {
-            sshCommands.push(`${sudo}docker rmi ${dockerImageLocation}[::]?`);
+            sshCommands.push(`${sudo}docker rmi -f ${dockerImageLocation}[::]?`);
         }
         if (dockerImageLocation) {
             sshCommands.push(`${sudo}docker pull ${dockerImageLocation}`);
