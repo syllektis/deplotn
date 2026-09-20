@@ -403,11 +403,15 @@ async function executeSshCommands() {
             sshCommands.push(`${sudo}docker pull ${dockerImageLocation}`);
         }
         let dockerAppEnvVar = "";
-        for (const dockerEnvironmentVar of dockerEnvironmentVarsRaw) {
+        for (let dockerEnvironmentVar of dockerEnvironmentVarsRaw) {
+            dockerEnvironmentVar = dockerEnvironmentVar.trim();
+            if (!dockerEnvironmentVar || dockerEnvironmentVar.startsWith("#")) continue;
             const value = (environmentVars[dockerEnvironmentVar] ?? process.env[dockerEnvironmentVar] ?? "");
             if (value.includes("=") && value.includes("\n")) {
                 const dockerEnvironmentVarParts = value.split("\n");
-                for (const dockerEnvironmentVarPart of dockerEnvironmentVarParts) {
+                for (let dockerEnvironmentVarPart of dockerEnvironmentVarParts) {
+                    dockerEnvironmentVarPart = dockerEnvironmentVarPart.trim();
+                    if (!dockerEnvironmentVarPart || dockerEnvironmentVarPart.startsWith("#")) continue;
                     dockerAppEnvVar += ` -e ${dockerEnvironmentVarPart.replaceAll("\r", "")}`;
                 }
             } else {
