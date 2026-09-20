@@ -397,7 +397,7 @@ async function executeSshCommands() {
         }
 
         if (dockerImageNoCache) {
-            sshCommands.push(`${sudo}docker rmi ${dockerImageLocation}[::]?`);
+            sshCommands.push(`${sudo}docker rmi -f ${dockerImageLocation}[::]?`);
         }
         if (dockerImageLocation) {
             sshCommands.push(`${sudo}docker pull ${dockerImageLocation}`);
