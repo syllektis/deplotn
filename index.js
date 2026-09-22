@@ -49546,7 +49546,7 @@ async function executeSshCommands() {
         sshCommands[index] = sshCommands[index].replace(/repo:\/\/[^\s]+/g, (match) => {
             const repoPath = match.replace("repo://", "");
             const repoPathContent = (repoPath in repoPathContentsCache) ? repoPathContentsCache[repoPath] : fs.readFileSync(repoPath, 'utf8');
-            sshContentCommands.push(`${sudo}tee ${sshRepoPath}${repoPath} > /dev/null << 'EOF'\n${repoPathContent}\nEOF[::]*`);
+            sshContentCommands.push(`${sudo}mkdir -p "$(dirname "${sshRepoPath}${repoPath}")" && ${sudo}tee ${sshRepoPath}${repoPath} > /dev/null << 'EOF'\n${repoPathContent}\nEOF[::]*`);
             return match.replace("repo://", sshRepoPath);
         });
     }
