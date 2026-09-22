@@ -386,7 +386,7 @@ async function executeSshCommands() {
             const domain = registryParts[registryParts.length - 1];
             const access = registryParts.slice(0, registryParts.length - 1);
             const [username, ...password] = access.join("@").split(":");
-            sshCommands.push(`${sudo}echo "${password.join("")}" | docker login ${domain} -u ${username} --password-stdin`);
+            sshCommands.push(`${sudo}echo "${password.join("")}" | ${sudo}docker login ${domain} -u ${username} --password-stdin`);
         }
         for (const dockerAppRunArgEntry of dockerAppRunArgs) {
             const parts = dockerAppRunArgEntry.split("|");
