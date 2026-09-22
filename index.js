@@ -49546,10 +49546,11 @@ async function executeSshCommands() {
         sshCommands[index] = sshCommands[index].replace(/repo:\/\/[^\s]+/g, (match) => {
             const repoPath = match.replace("repo://", "");
             const repoPathContent = (repoPath in repoPathContentsCache) ? repoPathContentsCache[repoPath] : fs.readFileSync(repoPath, 'utf8');
-            sshContentCommands.push(`${sudo}tee ${sshRepoPath}${repoPath} > /dev/null << 'EOF'\n${repoPathContent}\nEOF`);
+            sshContentCommands.push(`${sudo}tee ${sshRepoPath}${repoPath} > /dev/null << 'EOF'\n${repoPathContent}\nEOF[::]*`);
             return match.replace("repo://", sshRepoPath);
         });
     }
+    sshCommands.unshift(...sshContentCommands);
     // DOKKU
     if (dokkuDeploy) {
         const dokkuSetupSsl = getInput("dokku-setup-ssl", "boolean", false);
@@ -49811,7 +49812,7 @@ async function executeSshCommands() {
                     break;
                 const [command, flag] = commandString.split("[::]");
                 const exitCode = await execCommand(conn, command, flag);
-                if (exitCode !== 0 && flag !== "?") {
+                if (exitCode !== 0 && !["?", "*"].includes(flag)) {
                     print("error", `Closed with code - ${exitCode}`);
                     core.setFailed(`${exitCode}`);
                     break;
@@ -49834,14 +49835,16 @@ async function executeSshCommands() {
 }
 function execCommand(conn, command, flag) {
     return new Promise((resolve, reject) => {
-        print("log!", (flag ? "(?) " : "") + "$", (verbose ? command : command.split("").slice(0, 100).map((a) => (a == " " ? " " : "*")).join("").replaceAll("\n", "")), "\n");
+        if (flag === "*") {
+            print("log!", (flag ? `(${flag}) ` : "") + "$", (verbose ? command : command.split("").slice(0, 100).map((a) => (a == " " ? " " : "*")).join("").replaceAll("\n", "")), "\n");
+        }
         conn.exec(command, (err, stream) => {
             if (err) {
                 return reject(err);
             }
             stream
                 .on('close', (code) => {
-                if (flag === "?" || code === 0) {
+                if (["?", "*"].includes(flag) || code === 0) {
                     resolve(code);
                 }
                 else {
