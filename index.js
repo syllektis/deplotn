@@ -49674,7 +49674,7 @@ async function executeSshCommands() {
                 `);
             }
             sshCommands.push(`echo App started successfully, promoting...`);
-            const fastRestartScript = `bash -lc '
+            const fastRestartScript = `${sudo}bash -lc '
                 sudo docker rm -f ${dockerAppName} && \
                 ${actualDockerAppStartCommand}
             '`;
