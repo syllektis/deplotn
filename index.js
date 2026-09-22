@@ -49504,7 +49504,7 @@ async function executeSshCommands() {
     const sshPort = getInput("ssh-port", "string", environmentVars["SSH_PORT"] ?? process.env.SSH_PORT ?? sshConnectionPort ?? "");
     const sshPassphrase = getInput("ssh-passphrase", "string", environmentVars["SSH_PASSPHRASE"] ?? process.env.SSH_PASSPHRASE ?? "");
     const sshPrivateKey = getInput("ssh-privatekey", "string", environmentVars["SSH_PRIVATEKEY"] ?? process.env.SSH_PRIVATEKEY ?? "");
-    const sshCommands = environmentVarsSshCommands.concat(getInput("ssh-commands", "array", []).map((c) => `${c}[::]?`));
+    const sshCommands = environmentVarsSshCommands.concat(getInput("ssh-commands", "array", []).map((c) => `${c}[::]!`));
     const sshUsername = getInput("ssh-username", "string", environmentVars["SSH_USERNAME"] ?? process.env.SSH_USERNAME ?? sshConnectionUsername ?? "");
     const sshPassword = getInput("ssh-password", "string", environmentVars["SSH_PASSWORD"] ?? process.env.SSH_PASSWORD ?? sshConnectionPassword ?? "");
     if (!sshHost) {
