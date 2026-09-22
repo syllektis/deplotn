@@ -49835,7 +49835,7 @@ async function executeSshCommands() {
 }
 function execCommand(conn, command, flag) {
     return new Promise((resolve, reject) => {
-        if (flag === "*") {
+        if (flag !== "*" && !verbose) {
             print("log!", (flag ? `(${flag}) ` : "") + "$", (verbose ? command : command.split("").slice(0, 100).map((a) => (a == " " ? " " : "*")).join("").replaceAll("\n", "")), "\n");
         }
         conn.exec(command, (err, stream) => {
