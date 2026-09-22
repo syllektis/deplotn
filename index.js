@@ -49667,15 +49667,15 @@ async function executeSshCommands() {
                     done; 
                     if [ "$__DEPLOTN_APP_DEPLOYED__" -eq "1" ]; then
                         echo "Health check failed...";
-                        sudo docker logs ${dockerDeploymentAppName};
+                        ${sudo} docker logs ${dockerDeploymentAppName};
                     fi
-                    sudo docker rm -f ${dockerDeploymentAppName} 
+                    ${sudo} docker rm -f ${dockerDeploymentAppName} 
                     exit $__DEPLOTN_APP_DEPLOYED__
                 `);
             }
             sshCommands.push(`echo App started successfully, promoting...`);
-            const fastRestartScript = `${sudo}bash -lc '
-                sudo docker rm -f ${dockerAppName} && \
+            const fastRestartScript = `bash -lc '
+                ${sudo} docker rm -f ${dockerAppName} && \
                 ${actualDockerAppStartCommand}
             '`;
             sshCommands.push(fastRestartScript);
@@ -49756,7 +49756,7 @@ async function executeSshCommands() {
         if (configContent) {
             sshCommands.push(`echo Preparing apache2 configuration...`);
             sshCommands.push(`${sudo}touch ${apache2ServerConfigPath}`);
-            sshCommands.push(`${sudo}cat << EOF > ${apache2ServerConfigPath}\n${configContent}\nEOF`);
+            sshCommands.push(`${sudo}tee ${apache2ServerConfigPath} > /dev/null << 'EOF'\n${configContent}\nEOF`);
             sshCommands.push(`${sudo}a2enmod proxy proxy_http headers`);
             sshCommands.push(`${sudo}a2ensite ${apacheConfFileName}`);
             if (apache2SetupSsl) {
