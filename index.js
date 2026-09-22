@@ -49781,6 +49781,7 @@ async function executeSshCommands() {
         }
     }
     sshPostCommands.forEach((c) => sshCommands.push(`${c}[::]?`));
+    sshCommands.push(`${sudo}rm -Rf ${sshRepoPath}[::]?`);
     sshCommands.push("exit");
     const conn = new ssh2_1.Client();
     print("log", "SSH Commands:", sshCommands);
