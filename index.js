@@ -49536,6 +49536,20 @@ async function executeSshCommands() {
     }
     if (!appPublicPort)
         appPublicPort = commonAppPublicPort ?? appPublicPortRaw;
+    // RESOLVE REPO PATHS
+    const repoPathContentsCache = {};
+    const sshContentCommands = [];
+    const sshRepoPath = "/var/tmp/deplotn_repository_files/";
+    for (let index = 0; index < sshCommands.length; index++) {
+        if (!sshCommands[index].includes("repo://"))
+            continue;
+        sshCommands[index] = sshCommands[index].replace(/repo:\/\/[^\s]+/g, (match) => {
+            const repoPath = match.replace("repo://", "");
+            const repoPathContent = (repoPath in repoPathContentsCache) ? repoPathContentsCache[repoPath] : fs.readFileSync(repoPath, 'utf8');
+            sshContentCommands.push(`${sudo}tee ${sshRepoPath}${repoPath} > /dev/null << 'EOF'\n${repoPathContent}\nEOF`);
+            return match.replace("repo://", sshRepoPath);
+        });
+    }
     // DOKKU
     if (dokkuDeploy) {
         const dokkuSetupSsl = getInput("dokku-setup-ssl", "boolean", false);
