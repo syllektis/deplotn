@@ -1,0 +1,267 @@
+
+name: "deplotn"
+description: "Seamless cloud deployment. (Docker, VM, Dokku) By Rivtn"
+author: |
+  "Adewale Azeez <iamthecarisma@gmail.com>"
+
+inputs:
+  # app
+  app-name: 
+    description: "The name of your application after deployment"
+    required: true
+  app-public-port: 
+    description: "The list of public ports for each environment"
+    required: false
+  verbose: 
+    description: "Print out as much log as possible for debugging"
+    required: false
+
+  # environment
+  environment: 
+    description: "Deployment environment"
+    required: true
+  env-creation: 
+    description: "Flag to indicate whether to create the environment variables file"
+    required: true
+  environment-output: 
+    description: "Flag to indicate to resolve and output repo variables"
+    required: false
+  env-file-path: 
+    description: "Path relative to the project directory to write the environment variables. Default .env"
+    required: false
+    default: .env
+  env-file-content: 
+    description: "The file content to write to the environment variable file"
+    required: false
+  env-file-vars:
+    description: "The list of variables to write to the env file path. Default to 'environment-vars' if not set"
+    required: false
+  environment-vars:
+    description: "The list of variables to process and output for subsequent actions"
+    required: false
+    default: |
+        CONFIGS
+  environment-vars-read-prefix:
+    description: "The prefix for the environment variable when reading from inputs if available, e.g. UAT_, ${environment}_"
+    required: false
+  environment-vars-write-prefix:
+    description: "The prefix for the environment variable when writing to output if available, e.g. UAT_, ${environment}_"
+    required: false
+  environment-casing:
+    description: "Letter casing for the environment variables, options are UPPER, LOWER, NONE"
+    default: "UPPER"
+    required: false
+
+  # docker setup
+  dockerize: 
+    description: "Flag to indicate if to build a docker image if a Dockerfile is in the project"
+    required: false
+    default: false
+  dockerfile: 
+    description: "The path to the Dockerfile for building the docker image"
+    default: "Dockerfile"
+    required: false
+  docker-registry-host: 
+    description: "Docker registry to push the built docker image"
+    required: false
+  docker-registry-username: 
+    description: "Docker registry username"
+    required: false
+  docker-registry-password: 
+    description: "Docker registry password"
+    required: false
+  docker-project-env-path: 
+    description: "The project .env path"
+    default: ".env"
+    required: false
+  docker-write-env-vars: 
+    description: "The variables to put in the .env file in the Dockerfile project root"
+    required: false
+    default: |
+        CONFIGS
+  docker-image-tag: 
+    description: "Docker image tag"
+    required: false
+  docker-image-namespace: 
+    description: "Docker image name space"
+    required: false
+  docker-app-print-log: 
+    description: "The number of lines to print out for the newly deployed docker app. Default is 100"
+    required: false
+    default: 100
+  docker-app-process-wait-time: 
+    description: "The number of seconds to wait before validating actual app is running. Default is 10"
+    required: false
+    default: 10
+  environment-is-image-namespace: 
+    description: "Flag to indicate if the environment value is the same as the docker image name space"
+    required: false
+  docker-deploy: 
+    description: "Flag to indicate if to deploy to vm using docker"
+    required: false
+    default: false
+  docker-registries:
+    description: "List of docker registries to configure during deployment and build, example user:password@host.domain, user:password@host.domain|environment"
+    required: false
+  docker-app-name:
+    description: "Name of the container/service when run with docker. Defaults to app-name"
+    required: false
+  docker-app-run-args:
+    description: "Flat argument to add the to command to start the app in docker"
+    required: false
+  docker-image-location:
+    description: "Value of the docker service/container image. e.g. ghcr.io/test/app:environment"
+    required: false
+  docker-image-nocache:
+    description: "Flag to indicate if to remove the app existing image before pulling a new image"
+    required: false
+    default: true
+  docker-app-health-check:
+    description: "Flag to indicate if to validate the app is running before ending the deployment process"
+    required: false
+    default: true
+  docker-app-health-wait-time:
+    description: "Number of seconds to wait between the app uptime and health check validation. Default to 5 seconds"
+    required: false
+    default: 5
+  docker-app-health-max-check:
+    description: "Number of time to validate the app uptime and health check. If value is 12, the app health is checked every 5 seconds 12 times, so it check for a total of 60 seconds"
+    required: false
+    default: 12
+  docker-app-health-urls:
+    description: "List of custom urls to check if reachable to validate the app update. Override the default generated"
+    required: false
+
+  # ssh setup
+  ssh-execution: 
+    description: "Flag to indicate if to run commands in ssh host"
+    required: false
+    default: true
+  ssh-sudo: 
+    description: "Flag to indicate if to run all ssh commands with sudo"
+    required: false
+    default: true
+  ssh-connection: 
+    description: "One-line connection string for ssh. e.g. username:password@host:port"
+    required: false
+  ssh-host: 
+    description: "The SSH server host"
+    required: false
+  ssh-port: 
+    description: "The SSH server port"
+    required: false
+  ssh-username: 
+    description: "The SSH server username"
+    required: false
+  ssh-password: 
+    description: "The SSH server password"
+    required: false
+  ssh-passphrase: 
+    description: "The SSH server passphrase"
+    required: false
+  ssh-privatekey: 
+    description: "The SSH server privatekey"
+    required: false
+  ssh-commands: 
+    description: "Commands to execute in the ssh shell"
+    required: false
+  ssh-post-commands: 
+    description: "Commands to execute after all other commands in the ssh shell"
+    required: false
+  ssh-runtime-minutes: 
+    description: "Force close the ssh after the specified minutes to prevent indefinite pipeline execution"
+    required: false
+    default: 10
+  ssh-expose-vars: 
+    description: "The variables to expose to the ssh shell"
+    required: false
+  docker-app-env-vars: 
+    description: "The variables to include in the docker app start command"
+    required: false
+  
+  # apache2 setup
+  apache2-configure: 
+    description: "Flag to indicate if to enable apache2 configuration"
+    required: false
+    default: false
+  apache2-environment: 
+    description: "The environment to prefix to base domain for apache2 config, e.g apache2-environment=prod domain is app-name.prod.base-domain, defaults to environment or ENVIRONMENT variable"
+    required: false
+  apache2-config-path: 
+    description: "Relative path in the repo where the apache2 config file is located for the deployed app"
+    required: false
+  apache2-configure-domain: 
+    description: "Flag to indicate if to configure domain name for the app if using apache server"
+    required: false
+  apache2-configure-domain-www: 
+    description: "Flag to indicate if to configure domain name with www. prefix for the app if using apache server"
+    required: false
+  apache2-domain: 
+    description: "List of domain name to configure for the deployed app. e.g. name.domain.com, name.domain.com|environment"
+    required: false
+  apache2-base-domain: 
+    description: "Base domain for apache2 app, e.g apache2-base-domain=example.com domain is app-name.example.com, defaults to base-domain or BASE_DOMAIN variable"
+    required: false
+  apache2-add-env-to-domain: 
+    description: "Flag to indicate to add the environment to the apache2 domain name e.g. appname.$ENV.basedomain"
+    required: false
+    default: true
+  apache2-app-name:
+    description: "Name of the app/service for use when configuring the page. Defaults to app-name"
+    required: false
+  apache2-setup-ssl: 
+    description: "Flag to indicate to configure the SSL for the apache configured domains using the certbot command(s)"
+    required: false
+    default: false
+  apache2-domains: 
+    description: "The domains for the apache2 configuration"
+    required: false
+  apache2-conf-server-admin: 
+    description: "The server admin value for apache2 configuration e.g webmaster@yourdomain.com"
+    required: false
+  apache2-conf-raw-entries: 
+    description: "List of raw entries to add to the generated apache2 configuration file"
+    required: false
+  
+  # dokku setup
+  dokku-deploy: 
+    description: "Flag to indicate if to deploy to vm using dokku"
+    required: false
+    default: false
+  dokku-environment-vars: 
+    description: "Environment variable for the deployed dokku app"
+    required: false
+  dokku-app-name: 
+    description: "The app name for dokku app deployment, e.g dokku-app-name=example domain is example.base-domain, defaults to app-name or APP_NAME variable"
+    required: false
+  dokku-base-domain: 
+    description: "Base domain for dokku app deployment, e.g dokku-base-domain=example.com domain is app-name.example.com, defaults to base-domain or BASE_DOMAIN variable"
+    required: false
+  dokku-environment: 
+    description: "The environment to prefix to base domain for dokku app, e.g dokku-environment=prod domain is app-name.prod.base-domain, defaults to environment or ENVIRONMENT variable"
+    required: false
+  dokku-container-port: 
+    description: "Container port to export for connection"
+    required: false
+  dokku-registry-host: 
+    description: "Docker registry to pull the dokku image for deployment, default to registry-host or REGISTRY_HOST variable"
+    required: false
+  dokku-setup-ssl: 
+    description: "Flag to indicate to configure the SSL using letsencrypt dokku plugin"
+    required: false
+    default: false
+  dokku-domains: 
+    description: "The domains to configure for the dokku app"
+    required: false
+  dokku-add-env-to-domain: 
+    description: "Flag to indicate to add the environment to the dokku domain name e.g. appname.$ENV.basedomain"
+    required: false
+    default: true
+
+outputs:
+  env-setup-completed:
+    description: "The environment setup was completed successfully"
+
+runs:
+  using: 'node24'
+  main: 'index.js'

@@ -1,0 +1,32 @@
+{
+  "name": "deplotn",
+  "version": "0.1.0",
+  "description": "Seamless cloud deployment. (Docker, VM, Dokku) By Rivtn",
+  "main": "index.ts",
+  "scripts": {
+    "build": "ncc build index.ts -o ./",
+    "test": "npm run build; node index.js --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exoticlibraries/exotic-action.git"
+  },
+  "keywords": [],
+  "author": "Rivtn",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/exoticlibraries/exotic-action/issues"
+  },
+  "homepage": "https://exoticlibraries.github.io/exotic-action/",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.1",
+    "@vercel/ncc": "^0.38.4",
+    "ssh2": "^1.17.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/ssh2": "^1.15.5"
+  }
+}
