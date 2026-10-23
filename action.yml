@@ -12,6 +12,9 @@ inputs:
   app-public-port: 
     description: "The list of public ports for each environment"
     required: false
+  debug: 
+    description: "Print out processes logs for debugging"
+    required: false
   verbose: 
     description: "Print out as much log as possible for debugging"
     required: false
@@ -140,7 +143,7 @@ inputs:
   ssh-sudo: 
     description: "Flag to indicate if to run all ssh commands with sudo"
     required: false
-    default: true
+    default: false
   ssh-connection: 
     description: "One-line connection string for ssh. e.g. username:password@host:port"
     required: false

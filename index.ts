@@ -7,6 +7,7 @@ import * as github from "@actions/github";
 import { Client, ConnectConfig, ClientChannel } from 'ssh2';
 
 let sudo: string = "";
+let debug: boolean = false;
 let verbose: boolean = false;
 let __TEST_OBJECT: any = null;
 let __ENVIRONMENT_VARS: { [key: string]: string; } = {};
@@ -40,6 +41,7 @@ async function main(argc: number, argv: string[]) {
     if (argv.includes("--test")) {
         setupTest(argc, argv);
     }
+    debug = getInput("debug", "boolean", false);
     verbose = getInput("verbose", "boolean", false);
     sudo = getInput("ssh-sudo", "boolean", false) ? "sudo " : "";
     if (process.env.REPO_VARS) {
@@ -84,7 +86,7 @@ async function prepareEnvironmentVars() {
         acc[key] = executeInstruction(process.env[environmentVarsReadPrefix + key] ?? "", instruction)?.replaceAll("\r", "");
         return acc;
     }, {});
-    if (verbose) {
+    if (debug) {
         const environmentVarsOutputs = Object.keys(environmentVars).reduce((acc: any, k) => {
             acc[environmentVarsWritePrefix + k] = environmentVars[k];
             return acc;
@@ -316,11 +318,13 @@ async function executeSshCommands() {
     if (!appPublicPort) appPublicPort = commonAppPublicPort ?? appPublicPortRaw;
 
     // RESOLVE REPO PATHS
+    let movedRepoFile = false;
     const repoPathContentsCache: any = {};
     const sshContentCommands: string[] = [];
     const sshRepoPath = "/var/tmp/deplotn_repository_files/";
     for (let index = 0; index < sshCommands.length; index++) {
         if (!sshCommands[index].includes("repo://")) continue;
+        movedRepoFile = true;
         sshCommands[index] = sshCommands[index].replace(/repo:\/\/[^\s]+/g, (match) => {
             const repoPath = match.replace("repo://", "");
             const repoPathContent = (repoPath in repoPathContentsCache) ? repoPathContentsCache[repoPath] : fs.readFileSync(repoPath, 'utf8');
@@ -328,7 +332,9 @@ async function executeSshCommands() {
             return match.replace("repo://", sshRepoPath);
         });
     }
-    sshCommands.unshift(...sshContentCommands);
+    if (movedRepoFile) {
+        sshCommands.unshift(...sshContentCommands);
+    }
 
     // DOKKU
     if (dokkuDeploy) {
@@ -556,7 +562,9 @@ async function executeSshCommands() {
     }
 
     sshPostCommands.forEach((c) => sshCommands.push(`${c}[::]?`));
-    sshCommands.push(`${sudo}rm -Rf ${sshRepoPath}[::]?`);
+    if (movedRepoFile) {
+        sshCommands.push(`${sudo}rm -Rf ${sshRepoPath}[::]?`);
+    }
     sshCommands.push("exit");
 
     const conn = new Client();
@@ -565,7 +573,9 @@ async function executeSshCommands() {
     const connPayload: any = {
         host: sshHost,
         port: sshPort,
+        keepaliveCountMax: 3,
         username: sshUsername,
+        keepaliveInterval: 10000,
     }
     if (sshPassword) {
         connPayload.password = sshPassword;
